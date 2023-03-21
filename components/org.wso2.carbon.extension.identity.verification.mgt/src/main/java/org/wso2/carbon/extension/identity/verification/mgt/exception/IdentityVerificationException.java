@@ -25,18 +25,22 @@ import org.wso2.carbon.identity.base.IdentityException;
 public class IdentityVerificationException extends IdentityException {
 
     public IdentityVerificationException(String message) {
+
         super(message);
     }
 
     public IdentityVerificationException(String message, Throwable cause) {
+
         super(message, cause);
     }
 
     public IdentityVerificationException(String errorCode, String message) {
+
         super(errorCode, message);
     }
 
     public IdentityVerificationException(String errorCode, String message, Throwable cause) {
+
         super(errorCode, message, cause);
     }
 }

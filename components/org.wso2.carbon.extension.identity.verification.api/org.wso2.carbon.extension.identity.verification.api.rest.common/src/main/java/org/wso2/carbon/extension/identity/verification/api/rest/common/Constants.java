@@ -83,6 +83,7 @@ public class Constants {
                 "Error occurred while updating the verification claim."),
         ERROR_RESOLVING_USER("60004", "Error user resolving",
                 "Error occured while resolving the user");
+
         private final String code;
         private final String message;
         private final String description;

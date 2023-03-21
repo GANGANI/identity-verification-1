@@ -41,6 +41,11 @@ public class ContextLoader {
 
     private static final Log log = LogFactory.getLog(ContextLoader.class);
 
+    /**
+     * Get tenant domain from Auth user.
+     *
+     * @return tenant domain.
+     */
     public static String getTenantDomainFromAuthUser() {
 
         String tenantDomain = null;

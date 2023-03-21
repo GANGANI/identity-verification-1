@@ -44,56 +44,6 @@ public class IdentityVerificationUtils {
 
     private static final Log log = LogFactory.getLog(IdentityVerificationUtils.class);
 
-//    /**
-//     * Handle IdentityProviderManagementException, extract error code, error description and status code to be sent
-//     * in the response.
-//     *
-//     * @param e         IdentityProviderManagementException
-//     * @param errorEnum Error message Information.
-//     * @return APIError.
-//     */
-//    public static APIError handleIdVException(IdentityException e,
-//                                           Constants.ErrorMessage errorEnum, String data) {
-//
-//        ErrorResponse errorResponse;
-//        Response.Status status;
-//
-//        if (e instanceof IdVProviderMgtClientException || e instanceof IdVClaimMgtClientException) {
-//            if (e.getErrorCode() != null) {
-//                String errorCode = e.getErrorCode();
-//                errorResponse = getErrorBuilder(errorCode, e.getMessage(), errorEnum.getDescription()).
-//                        build(log, e.getMessage(), true);
-//                errorResponse.setCode(errorCode);
-//            } else {
-//                errorResponse = getErrorBuilder(errorEnum, data).build(log, e.getMessage(), true);
-//            }
-//            errorResponse.setDescription(e.getMessage());
-//            status = Response.Status.BAD_REQUEST;
-//        } else if (e instanceof IdvProviderMgtServerException || e instanceof IdvClaimMgtServerException) {
-//            if (e.getErrorCode() != null) {
-//                String errorCode = e.getErrorCode();
-//                errorResponse = getErrorBuilder(errorCode, e.getMessage(), data).build(log, e,
-//                        includeData(e.getMessage(), data), false);
-//                errorResponse.setCode(errorCode);
-//            } else {
-//                errorResponse = getErrorBuilder(errorEnum, data).
-//                        build(log, e, includeData(e.getMessage(), data), false);
-//            }
-//            errorResponse.setDescription(e.getMessage());
-//            status = Response.Status.INTERNAL_SERVER_ERROR;
-//        } else {
-//            if (e.getErrorCode() != null) {
-//                errorResponse = getErrorBuilder(e.getErrorCode(), e.getMessage(), data).build(log,
-//                        e, includeData(e.getMessage(), data), false);
-//            } else {
-//                errorResponse = getErrorBuilder(errorEnum, data).
-//                        build(log, e, includeData(e.getMessage(), data), false);
-//            }
-//            status = Response.Status.INTERNAL_SERVER_ERROR;
-//        }
-//        return new APIError(status, errorResponse);
-//    }
-
     public static APIError handleIdVException(IdentityException e, Constants.ErrorMessage errorEnum, String... data) {
 
         ErrorResponse errorResponse;

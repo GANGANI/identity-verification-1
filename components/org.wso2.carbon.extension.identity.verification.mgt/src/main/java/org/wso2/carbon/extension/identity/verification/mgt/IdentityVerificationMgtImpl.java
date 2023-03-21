@@ -118,7 +118,10 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
     @Override
     public void deleteIDVClaim(String userId, String idvClaimId, int tenantId) throws IdentityVerificationException {
 
-        isValidateUserId(userId, tenantId);
+        if (StringUtils.isBlank(userId) || !isValidateUserId(userId, tenantId)) {
+            throw IdentityVerificationExceptionMgt.handleClientException(
+                    IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
+        }
         identityVerificationClaimDAO.deleteIdVClaim(idvClaimId, tenantId);
     }
 

@@ -77,8 +77,6 @@ public class IdVProviderManagementDAO {
         } catch (IdentityRuntimeException e) {
             throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
                     ERROR_DATABASE_CONNECTION, e);
-//        } finally {
-//            IdentityDatabaseUtil.closeConnection();
         }
         return identityVerificationProvider;
     }

@@ -45,6 +45,7 @@ public class IdentityVerificationConstants {
         public static final String GET_IDV_CLAIMS_SQL =
                 "SELECT UUID, USER_ID, CLAIM_URI, IS_VERIFIED, METADATA FROM IDV_CLAIM WHERE " +
                         "USER_ID = ? AND TENANT_ID = ?";
+
         public static final String UPDATE_IDV_CLAIM_SQL =
                 "UPDATE IDV_CLAIM SET IS_VERIFIED = ?, METADATA = ? WHERE USER_ID = ? AND UUID = ? AND TENANT_ID = ?";
 

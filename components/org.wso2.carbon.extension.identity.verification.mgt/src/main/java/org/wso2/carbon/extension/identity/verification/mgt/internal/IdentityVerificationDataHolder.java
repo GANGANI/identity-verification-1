@@ -57,6 +57,11 @@ public class IdentityVerificationDataHolder {
         IdentityVerificationDataHolder.realmService = realmService;
     }
 
+    /**
+     * Get IdVProviderManager.
+     *
+     * @return IdVProviderManager.
+     */
     public static IdVProviderManager getIdVProviderManager() {
 
         if (idVProviderManager == null) {
@@ -66,6 +71,11 @@ public class IdentityVerificationDataHolder {
         return idVProviderManager;
     }
 
+    /**
+     * Set IdVProviderManager.
+     *
+     * @param idVProviderManager IdVProviderManager.
+     */
     public static void setIdVProviderManager(IdVProviderManager idVProviderManager) {
 
         IdentityVerificationDataHolder.idVProviderManager = idVProviderManager;

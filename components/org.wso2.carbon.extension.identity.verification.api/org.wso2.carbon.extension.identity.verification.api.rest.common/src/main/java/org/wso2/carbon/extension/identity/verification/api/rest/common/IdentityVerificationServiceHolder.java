@@ -49,11 +49,21 @@ public class IdentityVerificationServiceHolder {
         IdentityVerificationServiceHolder.idVProviderManager = idVProviderManager;
     }
 
+    /**
+     * Set IdentityVerificationMgt osgi service.
+     *
+     * @param identityVerificationMgt IdentityVerificationMgt.
+     */
     public static void setIdentityVerificationMgt(IdentityVerificationMgt identityVerificationMgt) {
 
         IdentityVerificationServiceHolder.identityVerificationMgt = identityVerificationMgt;
     }
 
+    /**
+     * Get IdentityVerificationMgt osgi service.
+     *
+     * @return IdentityVerificationMgt
+     */
     public static IdentityVerificationMgt getIdentityVerificationMgt() {
 
         return identityVerificationMgt;

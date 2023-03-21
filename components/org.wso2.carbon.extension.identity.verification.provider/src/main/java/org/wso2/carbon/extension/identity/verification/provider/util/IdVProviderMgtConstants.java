@@ -43,13 +43,10 @@ public class IdVProviderMgtConstants {
                 "IDVP WHERE TENANT_ID=? ORDER BY UUID OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         public static final String GET_COUNT_OF_IDVPS_SQL = "SELECT COUNT(*) FROM IDVP WHERE TENANT_ID=?";
         public static final String DELETE_IDV_SQL = "DELETE FROM IDVP WHERE UUID=? AND TENANT_ID=?";
-
         public static final String ADD_IDVP_SQL = "INSERT INTO IDVP(UUID, TENANT_ID, NAME, " +
                 "DESCRIPTION, IS_ENABLED) VALUES (?, ?, ?, ?, ?)";
-
         public static final String ADD_IDVP_CONFIG_SQL = "INSERT INTO IDVP_CONFIG " +
                 "(IDVP_ID, TENANT_ID, PROPERTY_KEY, PROPERTY_VALUE, IS_SECRET) VALUES (?, ?, ?, ?, ?)";
-
         public static final String ADD_IDVP_CLAIM_SQL = "INSERT INTO IDVP_CLAIM_MAPPING " +
                 "(IDVP_ID, TENANT_ID, CLAIM, LOCAL_CLAIM) VALUES (?, ?, ?, ?)";
         public static final String UPDATE_IDVP_SQL = "UPDATE IDVP SET NAME=?, DESCRIPTION=?, " +
@@ -84,6 +81,7 @@ public class IdVProviderMgtConstants {
                 "An Identity Verification Provider already exists with the name: %s."),
         ERROR_IDVP_REQUEST_INVALID("65005",
                 "An Identity Verification Provider already exists with the name: %s.");
+
         private final String code;
         private final String message;
 
