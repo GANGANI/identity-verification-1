@@ -48,7 +48,7 @@ public class IdentityVerificationServiceComponent {
     protected void activate(ComponentContext ctxt) {
 
         try {
-            IdentityVerificationMgt identityVerificationService = new IdentityVerificationMgtImpl();
+            IdentityVerificationMgt identityVerificationService = IdentityVerificationMgtImpl.getInstance();
             ctxt.getBundleContext().registerService(IdentityVerificationMgt.class.getName(),
                     identityVerificationService, null);
             log.info("IdentityVerificationService bundle activated successfully.");
