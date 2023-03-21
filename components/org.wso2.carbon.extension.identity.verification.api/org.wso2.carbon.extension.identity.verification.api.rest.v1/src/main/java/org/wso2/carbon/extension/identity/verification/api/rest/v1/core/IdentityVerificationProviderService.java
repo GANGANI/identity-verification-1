@@ -26,7 +26,6 @@ import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.IdVProv
 import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.IdVProviderRequest;
 import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.IdVProviderResponse;
 import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.VerificationClaim;
-import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtException;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdVConfigProperty;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVerificationProvider;
@@ -131,10 +130,9 @@ public class IdentityVerificationProviderService {
             return getIdVProviderResponse(identityVerificationProvider);
         } catch (IdVProviderMgtException e) {
             if (IdVProviderMgtConstants.ErrorMessage.ERROR_EMPTY_IDVP_ID.getCode().equals(e.getErrorCode())) {
-                throw IdentityVerificationUtils.handleIdVException(e,
-                        Constants.ErrorMessage.ERROR_CODE_IDVP_ID_NOT_FOUND, idVProviderId);
+                throw handleIdVException(e, Constants.ErrorMessage.ERROR_CODE_IDVP_ID_NOT_FOUND, idVProviderId);
             } else {
-                throw handleIdVException(e, Constants.ErrorMessage.ERROR_RETRIEVING_IDVP, null);
+                throw handleIdVException(e, Constants.ErrorMessage.ERROR_RETRIEVING_IDVP, idVProviderId);
             }
         }
     }
@@ -195,9 +193,6 @@ public class IdentityVerificationProviderService {
     private List<VerificationClaim> getIdVClaimMappings(IdentityVerificationProvider identityVerificationProvider) {
 
         Map<String, String> claimMappings = identityVerificationProvider.getClaimMappings();
-        if (claimMappings == null) {
-            return null;
-        }
         return claimMappings.entrySet().stream().map(entry -> {
             VerificationClaim verificationclaim = new VerificationClaim();
             verificationclaim.setLocalClaim(entry.getKey());
@@ -212,15 +207,19 @@ public class IdentityVerificationProviderService {
         IdVProviderResponse idvProviderResponse = new IdVProviderResponse();
         idvProviderResponse.setId(identityVerificationProvider.getIdVPUUID());
         idvProviderResponse.setName(identityVerificationProvider.getIdVProviderName());
-        idvProviderResponse.setIsEnabled(identityVerificationProvider.isEnable());
+        idvProviderResponse.setIsEnabled(identityVerificationProvider.isEnabled());
         idvProviderResponse.setDescription(identityVerificationProvider.getIdVProviderDescription());
 
-        List<ConfigProperty> configProperties =
-                Arrays.stream(identityVerificationProvider.getIdVConfigProperties()).
-                        map(propertyToExternal).collect(Collectors.toList());
+        if (identityVerificationProvider.getIdVConfigProperties() != null) {
+            List<ConfigProperty> configProperties =
+                    Arrays.stream(identityVerificationProvider.getIdVConfigProperties()).
+                            map(propertyToExternal).collect(Collectors.toList());
 
-        idvProviderResponse.setConfigProperties(configProperties);
-        idvProviderResponse.setClaims(getIdVClaimMappings(identityVerificationProvider));
+            idvProviderResponse.setConfigProperties(configProperties);
+        }
+        if (identityVerificationProvider.getClaimMappings() != null) {
+            idvProviderResponse.setClaims(getIdVClaimMappings(identityVerificationProvider));
+        }
         return idvProviderResponse;
     }
 
@@ -230,13 +229,15 @@ public class IdentityVerificationProviderService {
         identityVerificationProvider.setIdVPUUID(UUID.randomUUID().toString());
         identityVerificationProvider.setIdVProviderName(idVProviderRequest.getName());
         identityVerificationProvider.setIdVProviderDescription(idVProviderRequest.getDescription());
-        identityVerificationProvider.setEnable(idVProviderRequest.getIsEnabled());
-        identityVerificationProvider.setClaimMappings(getClaimMap(idVProviderRequest.getClaims()));
-        List<ConfigProperty> properties = idVProviderRequest.getConfigProperties();
-
-        identityVerificationProvider.setIdVConfigProperties(
-                properties.stream().map(propertyToInternal).toArray(IdVConfigProperty[]::new));
-        identityVerificationProvider.setEnable(true);
+        identityVerificationProvider.setEnabled(idVProviderRequest.getIsEnabled());
+        if (idVProviderRequest.getClaims() != null) {
+            identityVerificationProvider.setClaimMappings(getClaimMap(idVProviderRequest.getClaims()));
+        }
+        if (idVProviderRequest.getConfigProperties() != null) {
+            List<ConfigProperty> properties = idVProviderRequest.getConfigProperties();
+            identityVerificationProvider.setIdVConfigProperties(
+                    properties.stream().map(propertyToInternal).toArray(IdVConfigProperty[]::new));
+        }
         return identityVerificationProvider;
     }
 
@@ -247,12 +248,15 @@ public class IdentityVerificationProviderService {
         identityVerificationProvider.setIdVPUUID(oldIdVProvider.getIdVPUUID());
         identityVerificationProvider.setIdVProviderName(idVProviderRequest.getName());
         identityVerificationProvider.setIdVProviderDescription(idVProviderRequest.getDescription());
-        identityVerificationProvider.setEnable(idVProviderRequest.getIsEnabled());
-        identityVerificationProvider.setClaimMappings(getClaimMap(idVProviderRequest.getClaims()));
-        List<ConfigProperty> properties = idVProviderRequest.getConfigProperties();
-
-        identityVerificationProvider.setIdVConfigProperties(
-                properties.stream().map(propertyToInternal).toArray(IdVConfigProperty[]::new));
+        identityVerificationProvider.setEnabled(idVProviderRequest.getIsEnabled());
+        if (idVProviderRequest.getClaims() != null) {
+            identityVerificationProvider.setClaimMappings(getClaimMap(idVProviderRequest.getClaims()));
+        }
+        if (idVProviderRequest.getConfigProperties() != null) {
+            List<ConfigProperty> properties = idVProviderRequest.getConfigProperties();
+            identityVerificationProvider.setIdVConfigProperties(
+                    properties.stream().map(propertyToInternal).toArray(IdVConfigProperty[]::new));
+        }
         return identityVerificationProvider;
     }
 

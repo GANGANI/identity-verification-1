@@ -26,6 +26,13 @@ import org.wso2.carbon.extension.identity.verification.provider.exception.IdvPro
  */
 public class IdVProviderMgtExceptionManagement {
 
+    /**
+     * Handle the client exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @param data  The data to be added to the message if needed.
+     * @return IdVProviderMgtClientException.
+     */
     public static IdVProviderMgtClientException handleClientException(
             IdVProviderMgtConstants.ErrorMessage error, String data) {
 
@@ -33,6 +40,14 @@ public class IdVProviderMgtExceptionManagement {
         return new IdVProviderMgtClientException(error.getCode(), message);
     }
 
+    /**
+     * Handle the client exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @param data  The data to be added to the message if needed.
+     * @param e     The throwable.
+     * @return IdVProviderMgtClientException.
+     */
     public static IdVProviderMgtClientException handleClientException(
             IdVProviderMgtConstants.ErrorMessage error, String data, Throwable e) {
 
@@ -40,6 +55,12 @@ public class IdVProviderMgtExceptionManagement {
         return new IdVProviderMgtClientException(error.getCode(), message, e);
     }
 
+    /**
+     * Handle the client exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @return IdVProviderMgtClientException.
+     */
     public static IdVProviderMgtClientException handleClientException(
             IdVProviderMgtConstants.ErrorMessage error) {
 
@@ -47,6 +68,13 @@ public class IdVProviderMgtExceptionManagement {
         return new IdVProviderMgtClientException(error.getCode(), message);
     }
 
+    /**
+     * Handle the Server exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @param e     The throwable.
+     * @return IdVProviderMgtClientException.
+     */
     public static IdvProviderMgtServerException handleServerException(
             IdVProviderMgtConstants.ErrorMessage error, String data, Throwable e) {
 
@@ -54,6 +82,12 @@ public class IdVProviderMgtExceptionManagement {
         return new IdvProviderMgtServerException(error.getCode(), message, e);
     }
 
+    /**
+     * Handle the Server exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @return IdVProviderMgtClientException.
+     */
     public static IdvProviderMgtServerException handleServerException(
             IdVProviderMgtConstants.ErrorMessage error) {
 
@@ -61,6 +95,13 @@ public class IdVProviderMgtExceptionManagement {
         return new IdvProviderMgtServerException(error.getCode(), message);
     }
 
+    /**
+     * Handle the Server exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @param e     The throwable.
+     * @return IdVProviderMgtClientException.
+     */
     public static IdvProviderMgtServerException handleServerException(
             IdVProviderMgtConstants.ErrorMessage error, Throwable e) {
 

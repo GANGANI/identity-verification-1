@@ -35,13 +35,13 @@ import org.wso2.carbon.extension.identity.verification.mgt.model.IdentityVerifie
 import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
-import static org.wso2.carbon.extension.identity.verification.api.rest.v1.core.IdentityVerificationUtils.getClaimMetadataMap;
 import static org.wso2.carbon.extension.identity.verification.api.rest.v1.core.IdentityVerificationUtils.getTenantId;
 import static org.wso2.carbon.extension.identity.verification.api.rest.v1.core.IdentityVerificationUtils.handleException;
 
@@ -308,5 +308,20 @@ public class IdentityVerificationService {
             verificationGetResponse.addClaimsItem(createVerificationClaimResponse(idVClaim));
         }
         return verificationGetResponse;
+    }
+
+    /**
+     * Get the claim metadata map from the JSON object.
+     *
+     * @param claimMetadataJson JSON object of the claim metadata.
+     * @return Map of the claim metadata.
+     */
+    private Map<String, Object> getClaimMetadataMap(JSONObject claimMetadataJson) {
+
+        Map<String, Object> claimMetadata = new HashMap<>();
+        for (String key : claimMetadataJson.keySet()) {
+            claimMetadata.put(key, claimMetadataJson.get(key));
+        }
+        return claimMetadata;
     }
 }

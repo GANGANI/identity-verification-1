@@ -24,6 +24,16 @@ public class IdVProviderMgtConstants {
 
     public static final String IDVP_ERROR_PREFIX = "IDVP-";
     public static final String IDVP_SECRET_TYPE_IDVP_SECRETS = "IDVP_SECRET_PROPERTIES";
+    public static final String ID = "ID";
+    public static final String UUID = "UUID";
+    public static final String NAME = "NAME";
+    public static final String DESCRIPTION = "DESCRIPTION";
+    public static final String IS_ENABLED = "IS_ENABLED";
+    public static final String PROPERTY_KEY = "PROPERTY_KEY";
+    public static final String PROPERTY_VALUE = "PROPERTY_VALUE";
+    public static final String IS_SECRET = "IS_SECRET";
+    public static final String CLAIM = "CLAIM";
+    public static final String LOCAL_CLAIM = "LOCAL_CLAIM";
 
     /**
      * This class contains the constants used in the IdentityVerificationProvider.

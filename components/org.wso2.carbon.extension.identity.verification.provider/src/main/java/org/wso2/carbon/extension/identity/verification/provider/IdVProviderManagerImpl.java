@@ -37,14 +37,20 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
 
     private static final Log log = LogFactory.getLog(IdVProviderManagerImpl.class);
     IdVProviderManagementDAO idVProviderManagementDAO = new IdVProviderManagementDAO();
+    private static final IdVProviderManagerImpl instance = new IdVProviderManagerImpl();
 
-    @Override
-    public IdentityVerificationProvider addIdVProvider(IdentityVerificationProvider identityVerificationProvider,
-                                                       int tenantId) throws IdVProviderMgtException {
+    private IdVProviderManagerImpl() {
 
-        validateAddIdPVInputValues(identityVerificationProvider.getIdVProviderName(), tenantId);
-        idVProviderManagementDAO.addIdVProvider(identityVerificationProvider, tenantId);
-        return identityVerificationProvider;
+    }
+
+    /**
+     * Get the instance of IdVProviderManagerImpl.
+     *
+     * @return IdVProviderManagerImpl.
+     */
+    public static IdVProviderManagerImpl getInstance() {
+
+        return instance;
     }
 
     @Override
@@ -56,6 +62,15 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
                     ERROR_EMPTY_IDVP_ID);
         }
         return idVProviderManagementDAO.getIdVProvider(idVProviderId, tenantId);
+    }
+
+    @Override
+    public IdentityVerificationProvider addIdVProvider(IdentityVerificationProvider identityVerificationProvider,
+                                                       int tenantId) throws IdVProviderMgtException {
+
+        validateAddIdPVInputValues(identityVerificationProvider.getIdVProviderName(), tenantId);
+        idVProviderManagementDAO.addIdVProvider(identityVerificationProvider, tenantId);
+        return identityVerificationProvider;
     }
 
     @Override
@@ -92,6 +107,20 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
         return idVProviderManagementDAO.isIdVProviderExists(idvProviderId, tenantId);
     }
 
+    @Override
+    public IdentityVerificationProvider getIdVPByName(String idVPName, int tenantId)
+            throws IdVProviderMgtException {
+
+        if (StringUtils.isEmpty(idVPName)) {
+            // todo
+            String msg = "Invalid argument: Identity Verification Provider Name value is empty";
+            throw new IdVProviderMgtClientException(msg);
+        }
+
+        return idVProviderManagementDAO.getIdVPByName(idVPName, tenantId);
+    }
+
+
     /**
      * Validate input parameters for the addIdVProvider function.
      *
@@ -105,19 +134,6 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
             throw IdVProviderMgtExceptionManagement.handleClientException(IdVProviderMgtConstants.ErrorMessage.
                     ERROR_IDVP_ALREADY_EXISTS, idVPName);
         }
-    }
-
-    @Override
-    public IdentityVerificationProvider getIdVPByName(String idVPName, int tenantId)
-            throws IdVProviderMgtException {
-
-        if (StringUtils.isEmpty(idVPName)) {
-            // todo
-            String msg = "Invalid argument: Identity Verification Provider Name value is empty";
-            throw new IdVProviderMgtClientException(msg);
-        }
-
-        return idVProviderManagementDAO.getIdVPByName(idVPName, tenantId);
     }
 
     /**

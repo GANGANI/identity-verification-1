@@ -28,7 +28,7 @@ public class IdentityVerificationProvider {
     private String id;
     private String uuid;
     private String idVProviderName;
-    private boolean enable;
+    private boolean isEnabled = false;
     private String idVProviderDescription;
     private Map<String, String> claimMappings = new HashMap<>();
     private IdVConfigProperty[] idVConfigProperties = new IdVConfigProperty[0];
@@ -73,14 +73,14 @@ public class IdentityVerificationProvider {
         return uuid;
     }
 
-    public boolean isEnable() {
+    public boolean isEnabled() {
 
-        return enable;
+        return isEnabled;
     }
 
-    public void setEnable(boolean enable) {
+    public void setEnabled(boolean enabled) {
 
-        this.enable = enable;
+        this.isEnabled = enabled;
     }
 
     public String getIdVProviderDescription() {

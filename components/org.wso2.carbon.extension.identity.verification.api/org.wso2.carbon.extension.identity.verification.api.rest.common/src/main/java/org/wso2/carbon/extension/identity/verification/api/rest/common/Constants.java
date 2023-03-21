@@ -53,7 +53,7 @@ public class Constants {
                 "Server encountered an error while updating the identity verification provider."),
         ERROR_RETRIEVING_IDVP("65002",
                 "Unable to retrieve identity verification provider.",
-                "Server encountered an error while retrieving the identity verification provider."),
+                "Server encountered an error while retrieving the identity verification provider: %s."),
         ERROR_DELETING_IDVP("65003",
                 "Unable to delete identity verification provider.",
                 "Server encountered an error while deleting the identity verification provider."),

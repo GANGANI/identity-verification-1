@@ -23,10 +23,17 @@ import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVer
 import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVerificationServerException;
 
 /**
- * This class contains the implementation for the exception management.
+ * This class contains the implementation for the Identity Verification exception management.
  */
 public class IdentityVerificationExceptionMgt {
 
+    /**
+     * Handle the client exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @param data  The data to be added to the message if needed.
+     * @return IdentityVerificationClientException.
+     */
     public static IdentityVerificationClientException handleClientException(
             IdentityVerificationConstants.ErrorMessage error, String data) {
 
@@ -34,6 +41,14 @@ public class IdentityVerificationExceptionMgt {
         return new IdentityVerificationClientException(error.getCode(), message);
     }
 
+    /**
+     * Handle the client exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @param data  The data to be added to the message if needed.
+     * @param e     The throwable.
+     * @return IdentityVerificationClientException.
+     */
     public static IdentityVerificationClientException handleClientException(
             IdentityVerificationConstants.ErrorMessage error, String data, Throwable e) {
 
@@ -41,6 +56,12 @@ public class IdentityVerificationExceptionMgt {
         return new IdentityVerificationClientException(error.getCode(), message, e);
     }
 
+    /**
+     * Handle the client exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @return IdentityVerificationClientException.
+     */
     public static IdentityVerificationClientException handleClientException(
             IdentityVerificationConstants.ErrorMessage error) {
 
@@ -48,6 +69,14 @@ public class IdentityVerificationExceptionMgt {
         return new IdentityVerificationClientException(error.getCode(), message);
     }
 
+    /**
+     * Handle the Server exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @param data  The data to be added to the message if needed.
+     * @param e     The throwable.
+     * @return IdentityVerificationClientException.
+     */
     public static IdentityVerificationServerException handleServerException(
             IdentityVerificationConstants.ErrorMessage error, String data, Throwable e) {
 
@@ -55,6 +84,12 @@ public class IdentityVerificationExceptionMgt {
         return new IdentityVerificationServerException(error.getCode(), message, e);
     }
 
+    /**
+     * Handle the server exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @return IdentityVerificationServerException.
+     */
     public static IdentityVerificationServerException handleServerException(
             IdentityVerificationConstants.ErrorMessage error) {
 
@@ -62,6 +97,13 @@ public class IdentityVerificationExceptionMgt {
         return new IdentityVerificationServerException(error.getCode(), message);
     }
 
+    /**
+     * Handle the server exceptions.
+     *
+     * @param error The ErrorMessage.
+     * @param e     The throwable.
+     * @return IdentityVerificationServerException.
+     */
     public static IdentityVerificationServerException handleServerException(
             IdentityVerificationConstants.ErrorMessage error, Throwable e) {
 

@@ -139,15 +139,6 @@ public class IdentityVerificationUtils {
         }
     }
 
-    private static String includeData(String errorMsg, String data) {
-
-        String message = errorMsg;
-        if (data != null) {
-            message = String.format(errorMsg, data);
-        }
-        return message;
-    }
-
     /**
      * Get the tenant id from the tenant domain.
      *
@@ -164,20 +155,5 @@ public class IdentityVerificationUtils {
         }
 
         return IdentityTenantUtil.getTenantId(tenantDomain);
-    }
-
-    /**
-     * Get the claim metadata map from the JSON object.
-     *
-     * @param claimMetadataJson JSON object of the claim metadata.
-     * @return Map of the claim metadata.
-     */
-    public static Map<String, Object> getClaimMetadataMap(JSONObject claimMetadataJson) {
-
-        Map<String, Object> claimMetadata = new HashMap<>();
-        for (String key : claimMetadataJson.keySet()) {
-            claimMetadata.put(key, claimMetadataJson.get(key));
-        }
-        return claimMetadata;
     }
 }

@@ -27,16 +27,6 @@ import java.util.List;
  */
 public interface IdVProviderManager {
 
-    /**
-     * Add a new IdentityVerificationProvider.
-     *
-     * @param identityVerificationProvider IdentityVerificationProvider.
-     * @param tenantId                     Tenant Id.
-     * @return IdentityVerificationProvider.
-     * @throws IdVProviderMgtException IdVProviderMgtException.
-     */
-    IdentityVerificationProvider addIdVProvider(IdentityVerificationProvider identityVerificationProvider, int tenantId)
-            throws IdVProviderMgtException;
 
     /**
      * Get the IdentityVerificationProvider.
@@ -47,6 +37,17 @@ public interface IdVProviderManager {
      * @throws IdVProviderMgtException IdVProviderMgtException.
      */
     IdentityVerificationProvider getIdVProvider(String idVProviderId, int tenantId) throws IdVProviderMgtException;
+
+    /**
+     * Add a new IdentityVerificationProvider.
+     *
+     * @param identityVerificationProvider IdentityVerificationProvider.
+     * @param tenantId                     Tenant Id.
+     * @return IdentityVerificationProvider.
+     * @throws IdVProviderMgtException IdVProviderMgtException.
+     */
+    IdentityVerificationProvider addIdVProvider(IdentityVerificationProvider identityVerificationProvider, int tenantId)
+            throws IdVProviderMgtException;
 
     /**
      * Delete the IdentityVerificationProvider.
