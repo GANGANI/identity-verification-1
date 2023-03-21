@@ -34,12 +34,18 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.CLAIM_URI;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_ADDING_IDV_CLAIM;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_CHECKING_IDV_CLAIM_EXISTENCE;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_DELETING_IDV_CLAIM;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_RETRIEVING_IDV_CLAIM;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_RETRIEVING_IDV_CLAIMS;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_UPDATING_IDV_CLAIM;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.IDVP_ID;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.IS_VERIFIED;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.METADATA;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.USER_ID;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.UUID;
 
 /**
  * Identity verification claim DAO class.
@@ -108,12 +114,12 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
             try (ResultSet idVProviderResultSet = getIdVProviderStmt.executeQuery()) {
                 while (idVProviderResultSet.next()) {
                     idVClaim = new IdVClaim();
-                    idVClaim.setUuid(idVProviderResultSet.getString("UUID"));
-                    idVClaim.setUserId(idVProviderResultSet.getString("USER_ID"));
-                    idVClaim.setClaimUri(idVProviderResultSet.getString("CLAIM_URI"));
-                    idVClaim.setIdVPId(idVProviderResultSet.getString("IDVP_ID"));
-                    idVClaim.setStatus(idVProviderResultSet.getBoolean("IS_VERIFIED"));
-                    idVClaim.setMetadata(getMetadataJsonObject(idVProviderResultSet.getBytes("METADATA")));
+                    idVClaim.setUuid(idVProviderResultSet.getString(UUID));
+                    idVClaim.setUserId(idVProviderResultSet.getString(USER_ID));
+                    idVClaim.setClaimUri(idVProviderResultSet.getString(CLAIM_URI));
+                    idVClaim.setIdVPId(idVProviderResultSet.getString(IDVP_ID));
+                    idVClaim.setStatus(idVProviderResultSet.getBoolean(IS_VERIFIED));
+                    idVClaim.setMetadata(getMetadataJsonObject(idVProviderResultSet.getBytes(METADATA)));
                 }
             }
         } catch (SQLException e) {
@@ -135,11 +141,11 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
             try (ResultSet idVProviderResultSet = getIdVProviderStmt.executeQuery()) {
                 while (idVProviderResultSet.next()) {
                     IdVClaim idVClaim = new IdVClaim();
-                    idVClaim.setUuid(idVProviderResultSet.getString("UUID"));
-                    idVClaim.setUserId(idVProviderResultSet.getString("USER_ID"));
-                    idVClaim.setClaimUri(idVProviderResultSet.getString("CLAIM_URI"));
-                    idVClaim.setStatus(idVProviderResultSet.getBoolean("IS_VERIFIED"));
-                    idVClaim.setMetadata(getMetadataJsonObject(idVProviderResultSet.getBytes("METADATA")));
+                    idVClaim.setUuid(idVProviderResultSet.getString(UUID));
+                    idVClaim.setUserId(idVProviderResultSet.getString(USER_ID));
+                    idVClaim.setClaimUri(idVProviderResultSet.getString(CLAIM_URI));
+                    idVClaim.setStatus(idVProviderResultSet.getBoolean(IS_VERIFIED));
+                    idVClaim.setMetadata(getMetadataJsonObject(idVProviderResultSet.getBytes(METADATA)));
                     idVClaims.add(idVClaim);
                 }
             }

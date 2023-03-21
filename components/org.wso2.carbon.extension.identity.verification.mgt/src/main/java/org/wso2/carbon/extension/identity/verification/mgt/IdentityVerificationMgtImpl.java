@@ -21,13 +21,13 @@ package org.wso2.carbon.extension.identity.verification.mgt;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.JSONObject;
 import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAOImpl;
 import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVerificationException;
 import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVerificationServerException;
 import org.wso2.carbon.extension.identity.verification.mgt.internal.IdentityVerificationDataHolder;
 import org.wso2.carbon.extension.identity.verification.mgt.model.IdVClaim;
 import org.wso2.carbon.extension.identity.verification.mgt.model.IdentityVerifierData;
+import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManagerImpl;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtException;
 import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants;
 import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationExceptionMgt;
@@ -48,12 +48,27 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
     private static final Log log = LogFactory.getLog(IdentityVerificationMgtImpl.class);
 
     IdentityVerificationClaimDAOImpl identityVerificationClaimDAO = new IdentityVerificationClaimDAOImpl();
+    private static final IdentityVerificationMgtImpl instance = new IdentityVerificationMgtImpl();
+
+    private IdentityVerificationMgtImpl() {
+
+    }
+
+    /**
+     * Get the instance of IdentityVerificationMgtImpl.
+     *
+     * @return IdentityVerificationMgtImpl.
+     */
+    public static IdentityVerificationMgtImpl getInstance() {
+
+        return instance;
+    }
 
     @Override
     public IdentityVerifierData verifyIdentity(String userId, IdentityVerifierData identityVerifierData, int tenantId)
             throws IdentityVerificationException {
 
-        if (StringUtils.isBlank(userId) || !isValidateUserId(userId, tenantId)) {
+        if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
@@ -75,7 +90,7 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_IDV_CLAIM_ID, idvClaimId);
         }
-        if (StringUtils.isBlank(userId) || !isValidateUserId(userId, tenantId)) {
+        if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
@@ -86,7 +101,7 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
     public List<IdVClaim> addIdVClaims(String userId, List<IdVClaim> idVClaims, int tenantId)
             throws IdentityVerificationException {
 
-        if (StringUtils.isBlank(userId) || !isValidateUserId(userId, tenantId)) {
+        if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
@@ -106,11 +121,14 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_IDV_CLAIM_ID, idvClaimId);
         }
-        if (StringUtils.isBlank(userId) || !isValidateUserId(userId, tenantId)) {
+        if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
-        validateUpdateIDVClaimUpdateInputs(idvClaim, tenantId);
+        if (idvClaim.getMetadata() == null) {
+            throw IdentityVerificationExceptionMgt.handleClientException(
+                    IdentityVerificationConstants.ErrorMessage.ERROR_EMPTY_CLAIM_METADATA, null);
+        }
         identityVerificationClaimDAO.updateIdVClaim(idvClaim, tenantId);
         return idvClaim;
     }
@@ -118,7 +136,7 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
     @Override
     public void deleteIDVClaim(String userId, String idvClaimId, int tenantId) throws IdentityVerificationException {
 
-        if (StringUtils.isBlank(userId) || !isValidateUserId(userId, tenantId)) {
+        if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
@@ -128,7 +146,7 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
     @Override
     public IdVClaim[] getIDVClaims(String userId, int tenantId) throws IdentityVerificationException {
 
-        if (StringUtils.isBlank(userId) || !isValidateUserId(userId, tenantId)) {
+        if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
@@ -152,6 +170,7 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_IDV_PROVIDER_ID);
         }
         if (StringUtils.isBlank(claimUri)) {
+            // todo: validate claim URI.
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_CLAIM_URI);
         }
@@ -165,8 +184,6 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
 
         try {
             if (IdentityVerificationDataHolder.getIdVProviderManager().isIdVProviderExists(idvProviderId, tenantId)) {
-//                throw IdVClaimMgtExceptionManagement.handleClientException(
-//                        IdVClaimMgtConstants.ErrorMessage.ERROR_INVALID_IDV_PROVIDER_ID, null);
                 return true;
             }
         } catch (IdVProviderMgtException e) {
@@ -176,7 +193,7 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
         return false;
     }
 
-    private boolean isValidateUserId(String userId, int tenantId) throws IdentityVerificationServerException {
+    private boolean isValidUserId(String userId, int tenantId) throws IdentityVerificationServerException {
 
         UniqueIDUserStoreManager uniqueIDUserStoreManager;
         try {
@@ -185,8 +202,6 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
                             IdentityTenantUtil.getTenantDomain(tenantId));
             User user = uniqueIDUserStoreManager.getUserWithID(userId, null, null);
             if (user != null) {
-//                throw IdVClaimMgtExceptionManagement.handleClientException(
-//                        IdVClaimMgtConstants.ErrorMessage.ERROR_INVALID_USER_ID);
                 return true;
             }
         } catch (UserStoreException e) {
@@ -201,15 +216,6 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
         }
         return false;
     }
-
-//    private void validateIdVClaimId(String idVClaimId, int tenantId) throws IdVClaimMgtException {
-//
-//        boolean idvClaimExists = isIdVClaimExists(idVClaimId, tenantId);
-//        if (!idvClaimExists) {
-//            throw IdVClaimMgtExceptionManagement.handleClientException(
-//                    IdVClaimMgtConstants.ErrorMessage.ERROR_INVALID_IDV_CLAIM_ID, null);
-//        }
-//    }
 
     public boolean isIdVClaimExists(String idVClaimId, int tenantId) throws IdentityVerificationException {
 
@@ -229,15 +235,5 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
         return (UniqueIDUserStoreManager) userStoreManager;
-    }
-
-    private void validateUpdateIDVClaimUpdateInputs(IdVClaim idVClaim, int tenantId)
-            throws IdentityVerificationException {
-
-        JSONObject claimMetadata = idVClaim.getMetadata();
-        if (claimMetadata == null) {
-            throw IdentityVerificationExceptionMgt.handleClientException(
-                    IdentityVerificationConstants.ErrorMessage.ERROR_CODE_INVALID_INPUTS, null);
-        }
     }
 }

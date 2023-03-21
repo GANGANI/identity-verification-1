@@ -23,7 +23,13 @@ package org.wso2.carbon.extension.identity.verification.mgt.utils;
  */
 public class IdentityVerificationConstants {
 
-    public static final String IDV_ERROR_PREFIX = "IDV-";
+    private static final String IDV_ERROR_PREFIX = "IDV-";
+    public static final String UUID = "UUID";
+    public static final String USER_ID = "USER_ID";
+    public static final String CLAIM_URI = "CLAIM_URI";
+    public static final String IDVP_ID = "IDVP_ID";
+    public static final String IS_VERIFIED = "IS_VERIFIED";
+    public static final String METADATA = "METADATA";
 
     private IdentityVerificationConstants() {
 
@@ -64,9 +70,8 @@ public class IdentityVerificationConstants {
      */
     public enum ErrorMessage {
 
-        ERROR_IDV_CLAIM_DATA_ALREADY_EXISTS("65000",
-                "Identity Verification Claim data already exists."),
-        ERROR_CODE_INVALID_INPUTS("65001", "Provided inputs are invalid."),
+        ERROR_IDV_CLAIM_DATA_ALREADY_EXISTS("65000", "Identity Verification Claim data already exists."),
+        ERROR_EMPTY_CLAIM_METADATA("65001", "Claim Metadata is empty."),
         ERROR_INVALID_IDV_PROVIDER_ID("65002", "Identity Verification Provider Id not found."),
         ERROR_INVALID_CLAIM_URI("65003", "Claim URI not found."),
         ERROR_CHECKING_IDV_CLAIM_EXISTENCE("65004",
@@ -74,20 +79,13 @@ public class IdentityVerificationConstants {
         ERROR_INVALID_USER_ID("60005", "User cannot be found with the user Id: %s."),
         ERROR_INVALID_IDV_CLAIM_ID("65006", "Identity verification claim cannot be found with the " +
                 "claim id: %s."),
-        ERROR_DELETING_IDV_CLAIM("65007",
-                "Error deleting the Identity Verification Claim."),
-        ERROR_RETRIEVING_IDV_CLAIM("65008",
-                "Error retrieving the Identity Verification Claim."),
-        ERROR_UPDATING_IDV_CLAIM("65009",
-                "Error updating the Identity Verification Claim."),
-        ERROR_ADDING_IDV_CLAIM("65010",
-                "Error adding the Identity Verification Claim."),
-        ERROR_RETRIEVING_IDV_CLAIMS("65011",
-                "Error retrieving the Identity Verification Claims."),
-        ERROR_VALIDATING_IDV_PROVIDER_ID("65012",
-                "Error while validating identity provider id."),
-        ERROR_CHECKING_USER_ID_EXISTENCE("65013",
-                "Error while checking the user id existence.");
+        ERROR_DELETING_IDV_CLAIM("65007", "Error deleting the Identity Verification Claim."),
+        ERROR_RETRIEVING_IDV_CLAIM("65008", "Error retrieving the Identity Verification Claim."),
+        ERROR_UPDATING_IDV_CLAIM("65009", "Error updating the Identity Verification Claim."),
+        ERROR_ADDING_IDV_CLAIM("65010", "Error adding the Identity Verification Claim."),
+        ERROR_RETRIEVING_IDV_CLAIMS("65011", "Error retrieving the Identity Verification Claims."),
+        ERROR_VALIDATING_IDV_PROVIDER_ID("65012", "Error while validating identity provider id."),
+        ERROR_CHECKING_USER_ID_EXISTENCE("65013", "Error while checking the user id existence.");
 
         private final String code;
         private final String message;
