@@ -26,10 +26,12 @@ import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.IdVProv
 import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.IdVProviderRequest;
 import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.IdVProviderResponse;
 import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.VerificationClaim;
+import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManager;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtException;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdVConfigProperty;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVerificationProvider;
 import org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtConstants;
+import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,8 +71,7 @@ public class IdentityVerificationProviderService {
                 throw handleException(Response.Status.CONFLICT, Constants.ErrorMessage.ERROR_CODE_IDVP_EXISTS,
                         idVProviderRequest.getName());
             }
-            throw IdentityVerificationUtils.handleIdVException(e,
-                    Constants.ErrorMessage.ERROR_ADDING_IDVP, null);
+            throw IdentityVerificationUtils.handleIdVException(e, Constants.ErrorMessage.ERROR_ADDING_IDVP, null);
         }
         return getIdVProviderResponse(identityVerificationProvider);
     }
@@ -146,21 +147,28 @@ public class IdentityVerificationProviderService {
      */
     public IdVProviderListResponse getIdVProviders(Integer limit, Integer offset) {
 
+        int tenantId = getTenantId();
         try {
-            int tenantId = getTenantId();
-            int totalResults = IdentityVerificationServiceHolder.getIdVProviderManager().
-                    getCountOfIdVProviders(tenantId);
-            List<IdentityVerificationProvider> identityVerificationProviders =
-                    IdentityVerificationServiceHolder.getIdVProviderManager().getIdVProviders(limit, offset, tenantId);
+            IdVProviderManager idVProviderManager = IdentityVerificationServiceHolder.getIdVProviderManager();
+            int totalResults = idVProviderManager.getCountOfIdVProviders(tenantId);
+
             IdVProviderListResponse idVProviderListResponse = new IdVProviderListResponse();
-            if (CollectionUtils.isNotEmpty(identityVerificationProviders)) {
-                List<IdVProviderResponse> identityVerificationProvidersList = new ArrayList<>();
-                for (IdentityVerificationProvider idVP : identityVerificationProviders) {
-                    IdVProviderResponse idVPlistItem = getIdVProviderResponse(idVP);
-                    identityVerificationProvidersList.add(idVPlistItem);
+
+            if (totalResults > 0) {
+                List<IdentityVerificationProvider> identityVerificationProviders = idVProviderManager.
+                        getIdVProviders(limit, offset, tenantId);
+
+                if (CollectionUtils.isNotEmpty(identityVerificationProviders)) {
+                    List<IdVProviderResponse> identityVerificationProvidersList = new ArrayList<>();
+                    for (IdentityVerificationProvider idVP : identityVerificationProviders) {
+                        IdVProviderResponse idVPlistItem = getIdVProviderResponse(idVP);
+                        identityVerificationProvidersList.add(idVPlistItem);
+                    }
+                    idVProviderListResponse.setIdentityVerificationProviders(identityVerificationProvidersList);
+                    idVProviderListResponse.setCount(identityVerificationProviders.size());
+                } else {
+                    idVProviderListResponse.setCount(0);
                 }
-                idVProviderListResponse.setIdentityVerificationProviders(identityVerificationProvidersList);
-                idVProviderListResponse.setCount(identityVerificationProviders.size());
             } else {
                 idVProviderListResponse.setCount(0);
             }
@@ -169,8 +177,8 @@ public class IdentityVerificationProviderService {
             idVProviderListResponse.setTotalResults(totalResults);
             return idVProviderListResponse;
         } catch (IdVProviderMgtException e) {
-            throw handleIdVException(e,
-                    Constants.ErrorMessage.ERROR_RETRIEVING_IDVP, null);
+            throw handleIdVException(e, Constants.ErrorMessage.ERROR_RETRIEVING_IDVPS,
+                    IdentityTenantUtil.getTenantDomain(tenantId));
         }
     }
 

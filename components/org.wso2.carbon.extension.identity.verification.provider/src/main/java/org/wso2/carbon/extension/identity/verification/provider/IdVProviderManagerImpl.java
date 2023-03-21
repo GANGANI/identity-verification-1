@@ -112,9 +112,8 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
             throws IdVProviderMgtException {
 
         if (StringUtils.isEmpty(idVPName)) {
-            // todo
-            String msg = "Invalid argument: Identity Verification Provider Name value is empty";
-            throw new IdVProviderMgtClientException(msg);
+            throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
+                    ERROR_EMPTY_IDVP_NAME);
         }
 
         return idVProviderManagementDAO.getIdVPByName(idVPName, tenantId);
@@ -153,7 +152,7 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
         if (limit < 0) {
             String message = "Given limit: " + limit + " is a negative value.";
             throw IdVProviderMgtExceptionManagement.
-                    handleClientException(IdVProviderMgtConstants.ErrorMessage.ERROR_RETRIEVING_IDV_PROVIDER, message);
+                    handleClientException(IdVProviderMgtConstants.ErrorMessage.ERROR_RETRIEVING_IDV_PROVIDERS, message);
         }
 
         int maximumItemsPerPage = IdentityUtil.getMaximumItemPerPage();
@@ -184,7 +183,7 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
         if (offset < 0) {
             String message = "Invalid offset applied. Offset should not negative. offSet: " + offset;
             throw IdVProviderMgtExceptionManagement.handleClientException(IdVProviderMgtConstants.
-                            ErrorMessage.ERROR_RETRIEVING_IDV_PROVIDER, message);
+                            ErrorMessage.ERROR_RETRIEVING_IDV_PROVIDERS, message);
         }
         return offset;
     }

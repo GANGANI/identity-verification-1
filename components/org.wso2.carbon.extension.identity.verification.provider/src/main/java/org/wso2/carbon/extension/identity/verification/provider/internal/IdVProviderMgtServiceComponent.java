@@ -23,15 +23,8 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.wso2.carbon.extension.identity.verification.provider.IdVPSecretProcessor;
 import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManager;
 import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManagerImpl;
-import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVerificationProvider;
-import org.wso2.carbon.identity.application.common.model.IdentityProvider;
-import org.wso2.carbon.identity.secret.mgt.core.SecretsProcessor;
 
 /**
  * OSGi declarative services component which handles registration and un-registration of
@@ -48,7 +41,7 @@ public class IdVProviderMgtServiceComponent {
     @Activate
     protected void activate(ComponentContext ctxt) {
 
-        IdVProviderManager idVProviderManager = new IdVProviderManagerImpl();
+        IdVProviderManager idVProviderManager = IdVProviderManagerImpl.getInstance();
         ctxt.getBundleContext().registerService(IdVProviderManager.class.getName(),
                 idVProviderManager, null);
         log.info("IdentityVerificationProviderManager bundle activated successfully.");

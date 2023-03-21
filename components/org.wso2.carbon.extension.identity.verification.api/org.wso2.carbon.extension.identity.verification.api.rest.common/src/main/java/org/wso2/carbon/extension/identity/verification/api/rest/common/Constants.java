@@ -60,6 +60,10 @@ public class Constants {
         ERROR_RETRIEVING_TENANT("65004",
                 "Error retrieving tenant.",
                 "Error occurred while retrieving tenant."),
+        ERROR_RETRIEVING_IDVPS("65002",
+                "Unable to retrieve identity verification providers.",
+                "Server encountered an error while retrieving the identity verification providers in " +
+                        "the tenant: %s."),
 
         // Client errors - IDVP user APIs.
         ERROR_CODE_IDV_CLAIM_NOT_FOUND("10000", "Resource not found.",

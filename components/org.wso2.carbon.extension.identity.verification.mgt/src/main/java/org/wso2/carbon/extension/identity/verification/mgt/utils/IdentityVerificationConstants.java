@@ -83,9 +83,10 @@ public class IdentityVerificationConstants {
         ERROR_RETRIEVING_IDV_CLAIM("65008", "Error retrieving the Identity Verification Claim."),
         ERROR_UPDATING_IDV_CLAIM("65009", "Error updating the Identity Verification Claim."),
         ERROR_ADDING_IDV_CLAIM("65010", "Error adding the Identity Verification Claim."),
-        ERROR_RETRIEVING_IDV_CLAIMS("65011", "Error retrieving the Identity Verification Claims."),
-        ERROR_VALIDATING_IDV_PROVIDER_ID("65012", "Error while validating identity provider id."),
-        ERROR_CHECKING_USER_ID_EXISTENCE("65013", "Error while checking the user id existence.");
+        ERROR_ADDING_IDV_CLAIMS("65011", "Error adding the Identity Verification Claims."),
+        ERROR_RETRIEVING_IDV_CLAIMS("65012", "Error retrieving the Identity Verification Claims."),
+        ERROR_VALIDATING_IDV_PROVIDER_ID("65013", "Error while validating identity provider id."),
+        ERROR_CHECKING_USER_ID_EXISTENCE("65014", "Error while checking the user id existence.");
 
         private final String code;
         private final String message;

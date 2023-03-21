@@ -17,8 +17,6 @@
  */
 package org.wso2.carbon.extension.identity.verification.mgt.dao;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.json.JSONObject;
 import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVerificationException;
 import org.wso2.carbon.extension.identity.verification.mgt.model.IdVClaim;
@@ -36,6 +34,7 @@ import java.util.List;
 
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.CLAIM_URI;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_ADDING_IDV_CLAIM;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_ADDING_IDV_CLAIMS;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_CHECKING_IDV_CLAIM_EXISTENCE;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_DELETING_IDV_CLAIM;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_RETRIEVING_IDV_CLAIM;
@@ -44,6 +43,13 @@ import static org.wso2.carbon.extension.identity.verification.mgt.utils.Identity
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.IDVP_ID;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.IS_VERIFIED;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.METADATA;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.SQLQueries.ADD_IDV_CLAIM_SQL;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.SQLQueries.DELETE_IDV_CLAIM_SQL;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.SQLQueries.GET_IDV_CLAIMS_SQL;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.SQLQueries.GET_IDV_CLAIM_SQL;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.SQLQueries.IS_IDV_CLAIM_DATA_EXIST_SQL;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.SQLQueries.IS_IDV_CLAIM_EXIST_SQL;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.SQLQueries.UPDATE_IDV_CLAIM_SQL;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.USER_ID;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.UUID;
 
@@ -52,15 +58,12 @@ import static org.wso2.carbon.extension.identity.verification.mgt.utils.Identity
  */
 public class IdentityVerificationClaimDAOImpl implements IdentityVerificationClaimDAO {
 
-    private static final Log log = LogFactory.getLog(IdentityVerificationClaimDAOImpl.class);
-
     @Override
     public void addIdVClaimList(List<IdVClaim> idvClaimList, int tenantId) throws IdentityVerificationException {
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false)) {
             for (IdVClaim idVClaim : idvClaimList) {
-                try (PreparedStatement addIdVProviderStmt = connection.prepareStatement(IdentityVerificationConstants.
-                        SQLQueries.ADD_IDV_CLAIM_SQL)) {
+                try (PreparedStatement addIdVProviderStmt = connection.prepareStatement(ADD_IDV_CLAIM_SQL)) {
                     addIdVProviderStmt.setString(1, idVClaim.getUuid());
                     addIdVProviderStmt.setString(2, idVClaim.getUserId());
                     addIdVProviderStmt.setString(3, idVClaim.getClaimUri());
@@ -74,7 +77,7 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
                 }
             }
         } catch (SQLException e) {
-            throw IdentityVerificationExceptionMgt.handleServerException(ERROR_ADDING_IDV_CLAIM, e);
+            throw IdentityVerificationExceptionMgt.handleServerException(ERROR_ADDING_IDV_CLAIMS, e);
         }
     }
 
@@ -82,8 +85,7 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
     public void updateIdVClaim(IdVClaim idVClaim, int tenantId) throws IdentityVerificationException {
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false)) {
-            try (PreparedStatement updateIdVProviderStmt = connection.prepareStatement(IdentityVerificationConstants.
-                    SQLQueries.UPDATE_IDV_CLAIM_SQL)) {
+            try (PreparedStatement updateIdVProviderStmt = connection.prepareStatement(UPDATE_IDV_CLAIM_SQL)) {
                 updateIdVProviderStmt.setBoolean(1, idVClaim.getStatus());
                 updateIdVProviderStmt.setObject(2, getMetadata(idVClaim));
                 updateIdVProviderStmt.setString(3, idVClaim.getUserId());
@@ -105,8 +107,7 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
 
         IdVClaim idVClaim = null;
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false);
-             PreparedStatement getIdVProviderStmt = connection.prepareStatement(IdentityVerificationConstants.
-                     SQLQueries.GET_IDV_CLAIM_SQL)) {
+             PreparedStatement getIdVProviderStmt = connection.prepareStatement(GET_IDV_CLAIM_SQL)) {
             getIdVProviderStmt.setString(1, userId);
             getIdVProviderStmt.setString(2, idVClaimId);
             getIdVProviderStmt.setInt(3, tenantId);
@@ -133,8 +134,7 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
 
         List<IdVClaim> idVClaims = new ArrayList<>();
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false);
-             PreparedStatement getIdVProviderStmt = connection.prepareStatement(IdentityVerificationConstants.
-                     SQLQueries.GET_IDV_CLAIMS_SQL)) {
+             PreparedStatement getIdVProviderStmt = connection.prepareStatement(GET_IDV_CLAIMS_SQL)) {
             getIdVProviderStmt.setString(1, userId);
             getIdVProviderStmt.setInt(2, tenantId);
             getIdVProviderStmt.execute();
@@ -158,17 +158,12 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
     @Override
     public void deleteIdVClaim(String idVClaimId, int tenantId) throws IdentityVerificationException {
 
-        try (Connection connection = IdentityDatabaseUtil.getDBConnection(false)) {
-            try (PreparedStatement deleteIdVProviderStmt = connection.prepareStatement(IdentityVerificationConstants.
-                    SQLQueries.DELETE_IDV_CLAIM_SQL)) {
-                deleteIdVProviderStmt.setString(1, idVClaimId);
-                deleteIdVProviderStmt.setInt(2, tenantId);
-                deleteIdVProviderStmt.executeUpdate();
-                IdentityDatabaseUtil.commitTransaction(connection);
-            } catch (SQLException e1) {
-                IdentityDatabaseUtil.rollbackTransaction(connection);
-                throw IdentityVerificationExceptionMgt.handleServerException(ERROR_DELETING_IDV_CLAIM, e1);
-            }
+        try (Connection connection = IdentityDatabaseUtil.getDBConnection(false);
+             PreparedStatement deleteIdVProviderStmt = connection.prepareStatement(DELETE_IDV_CLAIM_SQL)) {
+            deleteIdVProviderStmt.setString(1, idVClaimId);
+            deleteIdVProviderStmt.setInt(2, tenantId);
+            deleteIdVProviderStmt.executeUpdate();
+            IdentityDatabaseUtil.commitTransaction(connection);
         } catch (SQLException e) {
             throw IdentityVerificationExceptionMgt.handleServerException(ERROR_DELETING_IDV_CLAIM, e);
         }
@@ -179,8 +174,7 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
             throws IdentityVerificationException {
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false);
-             PreparedStatement getIdVProviderStmt = connection.prepareStatement(IdentityVerificationConstants.
-                     SQLQueries.IS_IDV_CLAIM_DATA_EXIST_SQL)) {
+             PreparedStatement getIdVProviderStmt = connection.prepareStatement(IS_IDV_CLAIM_DATA_EXIST_SQL)) {
             getIdVProviderStmt.setString(1, userId);
             getIdVProviderStmt.setString(2, idvId);
             getIdVProviderStmt.setString(3, uri);
@@ -201,8 +195,7 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
     public boolean isIdVClaimExist(String claimId, int tenantId) throws IdentityVerificationException {
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false);
-             PreparedStatement getIdVProviderStmt = connection.prepareStatement(IdentityVerificationConstants.
-                     SQLQueries.IS_IDV_CLAIM_EXIST_SQL)) {
+             PreparedStatement getIdVProviderStmt = connection.prepareStatement(IS_IDV_CLAIM_EXIST_SQL)) {
             getIdVProviderStmt.setString(1, claimId);
             getIdVProviderStmt.setInt(2, tenantId);
             getIdVProviderStmt.execute();
