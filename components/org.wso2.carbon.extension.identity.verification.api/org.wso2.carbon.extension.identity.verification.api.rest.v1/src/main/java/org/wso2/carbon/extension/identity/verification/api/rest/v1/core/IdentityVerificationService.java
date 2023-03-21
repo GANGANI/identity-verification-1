@@ -43,6 +43,7 @@ import javax.ws.rs.core.Response;
 
 import static org.wso2.carbon.extension.identity.verification.api.rest.v1.core.IdentityVerificationUtils.getClaimMetadataMap;
 import static org.wso2.carbon.extension.identity.verification.api.rest.v1.core.IdentityVerificationUtils.getTenantId;
+import static org.wso2.carbon.extension.identity.verification.api.rest.v1.core.IdentityVerificationUtils.handleException;
 
 /**
  * Service class for identity verification.
@@ -70,6 +71,10 @@ public class IdentityVerificationService {
             } else if (IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_IDV_PROVIDER_ID.getCode().equals(e.getErrorCode())) {
                 throw IdentityVerificationUtils.handleIdVException(e,
                         Constants.ErrorMessage.ERROR_CODE_IDVP_ID_NOT_FOUND, userId);
+            } else if (IdentityVerificationConstants.ErrorMessage.ERROR_IDV_CLAIM_DATA_ALREADY_EXISTS.getCode().
+                    equals(e.getErrorCode())) {
+                throw handleException(Response.Status.CONFLICT, Constants.ErrorMessage.ERROR_CODE_IDV_CLAIM_CONFLICT,
+                        userId);
             } else {
                 throw IdentityVerificationUtils.handleIdVException(e,
                         Constants.ErrorMessage.ERROR_ADDING_VERIFICATION_CLAIM, null);

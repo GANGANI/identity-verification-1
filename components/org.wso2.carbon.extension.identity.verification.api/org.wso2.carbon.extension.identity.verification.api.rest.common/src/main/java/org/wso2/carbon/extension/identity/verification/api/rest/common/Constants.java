@@ -40,6 +40,9 @@ public class Constants {
         ERROR_CODE_IDVP_NOT_FOUND("60000",
                 "Invalid identity verification provider id.",
                 "Could not find an identity verification provider with given id %s."),
+        ERROR_CODE_IDVP_EXISTS("60001",
+                "Identity Verification Provider already exists.",
+                "Identity Verification Provider: %s already exists."),
 
         // Server errors - IDVP server APIs.
         ERROR_ADDING_IDVP("65000",
@@ -67,6 +70,8 @@ public class Constants {
                 "Identity verification claim cannot be found with the claim id: %s."),
         ERROR_CODE_IDVP_ID_NOT_FOUND("10003", "Identity Provider Id not found.",
                 "Provided IdVP id: %s is not found."),
+        ERROR_CODE_IDV_CLAIM_CONFLICT("10004", "Identity verification claim data already exists.",
+                "Identity verification claim data already exists for the user: %s."),
 
         // Server errors - IDVP user APIs.
         ERROR_RETRIEVING_IDV_CLAIM_METADATA("15000",

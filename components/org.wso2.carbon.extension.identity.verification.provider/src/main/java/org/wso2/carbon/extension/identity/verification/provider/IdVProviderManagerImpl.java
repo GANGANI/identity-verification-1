@@ -103,7 +103,7 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
 
         if (getIdVPByName(idVPName, tenantId) != null) {
             throw IdVProviderMgtExceptionManagement.handleClientException(IdVProviderMgtConstants.ErrorMessage.
-                    ERROR_IDVP_ALREADY_EXISTS, idVPName, null);
+                    ERROR_IDVP_ALREADY_EXISTS, idVPName);
         }
     }
 

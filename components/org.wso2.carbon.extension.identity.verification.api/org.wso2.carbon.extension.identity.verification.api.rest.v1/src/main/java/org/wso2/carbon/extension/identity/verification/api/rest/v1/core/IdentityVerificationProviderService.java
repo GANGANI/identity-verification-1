@@ -66,6 +66,10 @@ public class IdentityVerificationProviderService {
             identityVerificationProvider = IdentityVerificationServiceHolder.getIdVProviderManager().
                     addIdVProvider(createIdVProvider(idVProviderRequest), tenantId);
         } catch (IdVProviderMgtException e) {
+            if (IdVProviderMgtConstants.ErrorMessage.ERROR_IDVP_ALREADY_EXISTS.getCode().equals(e.getErrorCode())) {
+                throw handleException(Response.Status.CONFLICT, Constants.ErrorMessage.ERROR_CODE_IDVP_EXISTS,
+                        idVProviderRequest.getName());
+            }
             throw IdentityVerificationUtils.handleIdVException(e,
                     Constants.ErrorMessage.ERROR_ADDING_IDVP, null);
         }
