@@ -81,7 +81,7 @@ public class Constants {
                 "Error occurred while getting the verification claim."),
         ERROR_UPDATING_VERIFICATION_CLAIM("15004", "Unable to update the verification claim %s.",
                 "Error occurred while updating the verification claim."),
-        ERROR_RESOLVING_USER("60004", "Error user resolving",
+        ERROR_RESOLVING_USER("15005", "Error user resolving",
                 "Error occured while resolving the user");
 
         private final String code;
