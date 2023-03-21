@@ -28,7 +28,6 @@ import org.wso2.carbon.extension.identity.verification.provider.model.IdVConfigP
 import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVerificationProvider;
 import org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtConstants;
 import org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtExceptionManagement;
-import org.wso2.carbon.identity.base.IdentityRuntimeException;
 import org.wso2.carbon.identity.core.util.IdentityDatabaseUtil;
 import org.wso2.carbon.identity.secret.mgt.core.exception.SecretManagementException;
 
@@ -74,9 +73,6 @@ public class IdVProviderManagementDAO {
         } catch (SQLException e) {
             throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
                     ERROR_RETRIEVING_IDV_PROVIDERS, e);
-        } catch (IdentityRuntimeException e) {
-            throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
-                    ERROR_DATABASE_CONNECTION, e);
         }
         return identityVerificationProvider;
     }
@@ -254,9 +250,6 @@ public class IdVProviderManagementDAO {
         } catch (SQLException e) {
             throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
                     ERROR_RETRIEVING_IDV_PROVIDERS, e);
-        } catch (IdentityRuntimeException e) {
-            throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
-                    ERROR_DATABASE_CONNECTION, e);
         }
         return identityVerificationProviders;
     }
@@ -280,9 +273,6 @@ public class IdVProviderManagementDAO {
         } catch (SQLException e) {
             throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
                     ERROR_RETRIEVING_IDV_PROVIDERS, e);
-        } catch (IdentityRuntimeException e) {
-            throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
-                    ERROR_DATABASE_CONNECTION, e);
         }
         return count;
     }
@@ -316,9 +306,6 @@ public class IdVProviderManagementDAO {
             throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
                     ERROR_RETRIEVING_IDV_PROVIDERS, e);
             //todo
-        } catch (IdentityRuntimeException | IdvProviderMgtServerException e) {
-            throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
-                    ERROR_DATABASE_CONNECTION, e);
         }
         return identityVerificationProvider;
     }

@@ -26,9 +26,11 @@ import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.IdVProv
 import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.IdVProviderRequest;
 import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.IdVProviderResponse;
 import org.wso2.carbon.extension.identity.verification.api.rest.v1.model.VerificationClaim;
+import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtException;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdVConfigProperty;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVerificationProvider;
+import org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtConstants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,8 +97,13 @@ public class IdentityVerificationProviderService {
             newIdVProvider = IdentityVerificationServiceHolder.getIdVProviderManager().
                     updateIdVProvider(oldIdVProvider, updatedIdVProvider, tenantId);
         } catch (IdVProviderMgtException e) {
-            throw handleException(Response.Status.INTERNAL_SERVER_ERROR,
-                    Constants.ErrorMessage.ERROR_UPDATING_IDVP, null);
+            if (IdVProviderMgtConstants.ErrorMessage.ERROR_EMPTY_IDVP_ID.getCode().equals(e.getErrorCode())) {
+                throw IdentityVerificationUtils.handleIdVException(e,
+                        Constants.ErrorMessage.ERROR_CODE_IDVP_ID_NOT_FOUND, idVProviderId);
+            } else {
+                throw handleException(Response.Status.INTERNAL_SERVER_ERROR,
+                        Constants.ErrorMessage.ERROR_UPDATING_IDVP, null);
+            }
         }
         return getIdVProviderResponse(newIdVProvider);
     }
@@ -119,7 +126,12 @@ public class IdentityVerificationProviderService {
             }
             return getIdVProviderResponse(identityVerificationProvider);
         } catch (IdVProviderMgtException e) {
-            throw handleIdVException(e, Constants.ErrorMessage.ERROR_RETRIEVING_IDVP, null);
+            if (IdVProviderMgtConstants.ErrorMessage.ERROR_EMPTY_IDVP_ID.getCode().equals(e.getErrorCode())) {
+                throw IdentityVerificationUtils.handleIdVException(e,
+                        Constants.ErrorMessage.ERROR_CODE_IDVP_ID_NOT_FOUND, idVProviderId);
+            } else {
+                throw handleIdVException(e, Constants.ErrorMessage.ERROR_RETRIEVING_IDVP, null);
+            }
         }
     }
 

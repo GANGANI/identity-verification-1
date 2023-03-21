@@ -76,8 +76,8 @@ public class IdVProviderMgtConstants {
                 "An error occurred while deleting Identity Verification Provider: %s."),
         ERROR_IDVP_ALREADY_EXISTS("65008",
                 "An Identity Verification Provider already exists with the name: %s."),
-        ERROR_IDVP_REQUEST_INVALID("65009",
-                "An Identity Verification Provider already exists with the name: %s.");
+        ERROR_EMPTY_IDVP_ID("65009",
+                "Identity Verification Provider ID value is empty.");
 
         private final String code;
         private final String message;

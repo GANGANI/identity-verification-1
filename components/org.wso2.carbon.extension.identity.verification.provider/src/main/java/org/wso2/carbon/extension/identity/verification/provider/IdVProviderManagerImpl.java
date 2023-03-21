@@ -51,7 +51,10 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
     public IdentityVerificationProvider getIdVProvider(String idVProviderId, int tenantId)
             throws IdVProviderMgtException {
 
-        validateIdPId(idVProviderId);
+        if (StringUtils.isEmpty(idVProviderId)) {
+            throw IdVProviderMgtExceptionManagement.handleClientException(IdVProviderMgtConstants.ErrorMessage.
+                    ERROR_EMPTY_IDVP_ID);
+        }
         return idVProviderManagementDAO.getIdVProvider(idVProviderId, tenantId);
     }
 
@@ -101,21 +104,6 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
         if (getIdVPByName(idVPName, tenantId) != null) {
             throw IdVProviderMgtExceptionManagement.handleClientException(IdVProviderMgtConstants.ErrorMessage.
                     ERROR_IDVP_ALREADY_EXISTS, idVPName, null);
-        }
-    }
-
-    /**
-     * Validate input parameters for the getIdPByResourceId function.
-     *
-     * @param idVProviderId Identity Provider ID.
-     * @throws IdVProviderMgtException IdVProviderMgtException.
-     */
-    private void validateIdPId(String idVProviderId) throws IdVProviderMgtException {
-
-        if (StringUtils.isEmpty(idVProviderId)) {
-            String data = "Invalid argument: Identity Verification Provider ID value is empty";
-            throw IdVProviderMgtExceptionManagement.handleClientException(IdVProviderMgtConstants.ErrorMessage.
-                    ERROR_IDVP_REQUEST_INVALID, data);
         }
     }
 
