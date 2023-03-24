@@ -60,7 +60,7 @@ public class IdVPSecretProcessor implements SecretsProcessor<IdentityVerificatio
             if (!idVConfigProperty.isConfidential()) {
                 continue;
             }
-            String secretName = buildSecretName(clonedIdVP.getIdVPUUID(), idVConfigProperty.getName());
+            String secretName = buildSecretName(clonedIdVP.getIdVProviderUuid(), idVConfigProperty.getName());
             if (secretManager.isSecretExist(IDVP_SECRET_TYPE_IDVP_SECRETS, secretName)) {
                 ResolvedSecret resolvedSecret =
                         secretResolveManager.getResolvedSecret(IDVP_SECRET_TYPE_IDVP_SECRETS, secretName);
@@ -82,7 +82,7 @@ public class IdVPSecretProcessor implements SecretsProcessor<IdentityVerificatio
             if (!idVConfigProperty.isConfidential()) {
                 continue;
             }
-            String secretName = buildSecretName(clonedIdVP.getIdVPUUID(), idVConfigProperty.getName());
+            String secretName = buildSecretName(clonedIdVP.getIdVProviderUuid(), idVConfigProperty.getName());
             if (secretManager.isSecretExist(IDVP_SECRET_TYPE_IDVP_SECRETS, secretName)) {
                 // Update existing secret property.
                 updateExistingSecretProperty(secretName, idVConfigProperty);

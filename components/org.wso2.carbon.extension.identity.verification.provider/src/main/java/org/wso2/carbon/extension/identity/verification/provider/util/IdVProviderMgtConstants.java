@@ -101,7 +101,8 @@ public class IdVProviderMgtConstants {
         ERROR_DELETING_IDV_PROVIDER_CONFIGS("65015",
                 "An error occurred while deleting configs of Identity Verification Provider: %s."),
         ERROR_DELETING_IDV_PROVIDER_CLAIMS("65016",
-                "An error occurred while deleting claims of Identity Verification Provider: %s.");
+                "An error occurred while deleting claims of Identity Verification Provider: %s."),
+        ERROR_CODE_GET_DAO("65017", "No IdV Provider DAOs are registered.");
 
         private final String code;
         private final String message;

@@ -23,8 +23,16 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManager;
 import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManagerImpl;
+import org.wso2.carbon.extension.identity.verification.provider.dao.CachedBackedIdVProviderDAO;
+import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAO;
+import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAOImpl;
+
+import java.util.Comparator;
 
 /**
  * OSGi declarative services component which handles registration and un-registration of
@@ -41,9 +49,11 @@ public class IdVProviderMgtServiceComponent {
     @Activate
     protected void activate(ComponentContext ctxt) {
 
-        IdVProviderManager idVProviderManager = IdVProviderManagerImpl.getInstance();
+        IdVProviderDAO idVProviderDAO = new IdVProviderDAOImpl();
+        ctxt.getBundleContext().registerService(IdVProviderDAO.class.getName(),
+                new CachedBackedIdVProviderDAO(idVProviderDAO), null);
         ctxt.getBundleContext().registerService(IdVProviderManager.class.getName(),
-                idVProviderManager, null);
+                new IdVProviderManagerImpl(), null);
         log.info("IdentityVerificationProviderManager bundle activated successfully.");
     }
 
@@ -53,5 +63,33 @@ public class IdVProviderMgtServiceComponent {
         if (log.isDebugEnabled()) {
             log.debug("IdentityVerificationProviderManager bundle is deactivated.");
         }
+    }
+
+    @Reference(
+            name = "idVProvider.dao",
+            service = org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAO.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetIdVProviderDAO"
+    )
+    protected void setIdVProviderDAO(IdVProviderDAO idVProviderDAO) {
+
+        if (idVProviderDAO != null) {
+            if (log.isDebugEnabled()) {
+                log.debug("idVProviderDAO is registered in IdVProviderMgtService service.");
+            }
+
+            IdVProviderDataHolder.getInstance().getIdVProviderDAOs().add(idVProviderDAO);
+            IdVProviderDataHolder.getInstance().getIdVProviderDAOs().
+                    sort(Comparator.comparingInt(IdVProviderDAO::getPriority));
+        }
+    }
+
+    protected void unsetIdVProviderDAO(IdVProviderDAO idVProviderDAO) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("IdVProviderDAO is unregistered in IdVProviderMgtService service.");
+        }
+        IdVProviderDataHolder.getInstance().getIdVProviderDAOs().remove(idVProviderDAO);
     }
 }

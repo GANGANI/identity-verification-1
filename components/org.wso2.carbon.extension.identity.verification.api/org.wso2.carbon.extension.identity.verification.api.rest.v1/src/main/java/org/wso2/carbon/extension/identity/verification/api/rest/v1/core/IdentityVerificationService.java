@@ -136,8 +136,13 @@ public class IdentityVerificationService {
                 throw IdentityVerificationUtils.handleException(Response.Status.NOT_FOUND,
                         Constants.ErrorMessage.ERROR_CODE_IDV_CLAIM_NOT_FOUND, claimId);
             }
+            if (verificationClaimUpdateRequest.getIsVerified() == null ||
+                    verificationClaimUpdateRequest.getClaimMetadata() == null) {
+                throw IdentityVerificationUtils.handleException(Response.Status.BAD_REQUEST,
+                        Constants.ErrorMessage.ERROR_CODE_INCOMPLETE_UPDATE_REQUEST, claimId);
+            }
             idVClaim = IdentityVerificationServiceHolder.getIdentityVerificationMgt().
-                    updateIdVClaim(createIdVClaim(verificationClaimUpdateRequest, userId, claimId), tenantId);
+                    updateIdVClaim(userId, createIdVClaim(verificationClaimUpdateRequest, userId, claimId), tenantId);
         } catch (IdentityVerificationException e) {
             if (IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID.getCode().equals(e.getErrorCode())) {
                 throw IdentityVerificationUtils.handleIdVException(e,
@@ -245,7 +250,7 @@ public class IdentityVerificationService {
     private IdentityVerifierData getIdentityVerifier(VerifyRequest verifyRequest) {
 
         IdentityVerifierData identityVerifier = new IdentityVerifierData();
-        identityVerifier.setIdentityVerifierName(verifyRequest.getIdentityVerificationProvider());
+        identityVerifier.setIdentityVerificationProviderId(verifyRequest.getIdentityVerificationProvider());
         for (Claims claim : verifyRequest.getClaims()) {
             IdVClaim idVClaim = new IdVClaim();
             idVClaim.setClaimUri(claim.getClaimUri());
@@ -264,7 +269,7 @@ public class IdentityVerificationService {
     private VerificationPostResponse getVerificationPostResponse(IdentityVerifierData identityVerifierData) {
 
         VerificationPostResponse verificationPostResponse = new VerificationPostResponse();
-        verificationPostResponse.setIdentityVerificationProvider(identityVerifierData.getIdentityVerifierName());
+        verificationPostResponse.setIdentityVerificationProvider(identityVerifierData.getIdentityVerificationProviderId());
         for (IdVClaim idVClaim : identityVerifierData.getIdVClaims()) {
             VerificationClaimResponse verificationClaimResponse = new VerificationClaimResponse();
             verificationClaimResponse.setId(idVClaim.getUuid());

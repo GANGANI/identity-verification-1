@@ -68,7 +68,7 @@ public class IdentityVerificationProvider {
         this.uuid = idVProviderId;
     }
 
-    public String getIdVPUUID() {
+    public String getIdVProviderUuid() {
 
         return uuid;
     }

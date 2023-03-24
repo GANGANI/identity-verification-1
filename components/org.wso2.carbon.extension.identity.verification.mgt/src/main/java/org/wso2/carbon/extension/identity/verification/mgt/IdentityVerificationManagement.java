@@ -27,7 +27,6 @@ import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVer
 import org.wso2.carbon.extension.identity.verification.mgt.internal.IdentityVerificationDataHolder;
 import org.wso2.carbon.extension.identity.verification.mgt.model.IdVClaim;
 import org.wso2.carbon.extension.identity.verification.mgt.model.IdentityVerifierData;
-import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManagerImpl;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtException;
 import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants;
 import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationExceptionMgt;
@@ -43,14 +42,14 @@ import java.util.List;
 /**
  * This class contains the implementation for the IdentityVerificationService.
  */
-public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
+public class IdentityVerificationManagement implements IdentityVerificationMgt {
 
-    private static final Log log = LogFactory.getLog(IdentityVerificationMgtImpl.class);
+    private static final Log log = LogFactory.getLog(IdentityVerificationManagement.class);
 
     IdentityVerificationClaimDAOImpl identityVerificationClaimDAO = new IdentityVerificationClaimDAOImpl();
-    private static final IdentityVerificationMgtImpl instance = new IdentityVerificationMgtImpl();
+    private static final IdentityVerificationManagement instance = new IdentityVerificationManagement();
 
-    private IdentityVerificationMgtImpl() {
+    private IdentityVerificationManagement() {
 
     }
 
@@ -59,7 +58,7 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
      *
      * @return IdentityVerificationMgtImpl.
      */
-    public static IdentityVerificationMgtImpl getInstance() {
+    public static IdentityVerificationManagement getInstance() {
 
         return instance;
     }
@@ -72,7 +71,7 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
-        String identityVerifierName = identityVerifierData.getIdentityVerifierName();
+        String identityVerifierName = identityVerifierData.getIdentityVerificationProviderId();
         IdentityVerifierFactory identityVerifierFactory =
                 IdentityVerificationDataHolder.getIdentityVerifierFactory(identityVerifierName);
         if (identityVerifierFactory == null) {
@@ -106,17 +105,17 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
         for (IdVClaim idVClaim : idVClaims) {
-            validateAddIDVClaimInputs(idVClaim, tenantId);
+            validateAddIDVClaimInputs(userId, idVClaim, tenantId);
         }
         identityVerificationClaimDAO.addIdVClaimList(idVClaims, tenantId);
         return idVClaims;
     }
 
     @Override
-    public IdVClaim updateIdVClaim(IdVClaim idvClaim, int tenantId) throws IdentityVerificationException {
+    public IdVClaim updateIdVClaim(String userId, IdVClaim idvClaim, int tenantId)
+            throws IdentityVerificationException {
 
         String idvClaimId = idvClaim.getUuid();
-        String userId = idvClaim.getUserId();
         if (StringUtils.isBlank(idvClaimId) || !isIdVClaimExists(idvClaimId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_IDV_CLAIM_ID, idvClaimId);
@@ -160,9 +159,9 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
         return identityVerificationClaimDAO.isIdVClaimDataExist(userId, idvId, uri, tenantId);
     }
 
-    private void validateAddIDVClaimInputs(IdVClaim idVClaim, int tenantId) throws IdentityVerificationException {
+    private void validateAddIDVClaimInputs(String userId, IdVClaim idVClaim, int tenantId)
+            throws IdentityVerificationException {
 
-        String userId = idVClaim.getUserId();
         String idvProviderId = idVClaim.getIdVPId();
         String claimUri = idVClaim.getClaimUri();
         if (StringUtils.isBlank(idvProviderId) || !isValidIdVProviderId(idvProviderId, tenantId)) {
@@ -217,6 +216,7 @@ public class IdentityVerificationMgtImpl implements IdentityVerificationMgt {
         return false;
     }
 
+    @Override
     public boolean isIdVClaimExists(String idVClaimId, int tenantId) throws IdentityVerificationException {
 
         return identityVerificationClaimDAO.isIdVClaimExist(idVClaimId, tenantId);

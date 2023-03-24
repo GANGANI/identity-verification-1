@@ -79,16 +79,15 @@ import static org.wso2.carbon.extension.identity.verification.provider.util.IdVP
 /**
  * Data Access Layer functionality for Identity Verification Provider management.
  */
-public class IdVProviderManagementDAO {
+public class IdVProviderDAOImpl implements IdVProviderDAO {
 
-    /**
-     * Get Identity Verification Provider.
-     *
-     * @param idVPUuid Identity Verification Provider UUID.
-     * @param tenantId Tenant ID.
-     * @return Identity Verification Provider.
-     * @throws IdVProviderMgtException Error when getting Identity Verification Provider.
-     */
+    @Override
+    public int getPriority() {
+
+        return 1;
+    }
+
+    @Override
     public IdentityVerificationProvider getIdVProvider(String idVPUuid, int tenantId)
             throws IdVProviderMgtException {
 
@@ -110,14 +109,7 @@ public class IdVProviderManagementDAO {
         return identityVerificationProvider;
     }
 
-    /**
-     * Check whether an Identity Verification Provider exists.
-     *
-     * @param idVPUuid Identity Verification Provider UUID.
-     * @param tenantId Tenant ID.
-     * @return Identity Verification Provider.
-     * @throws IdVProviderMgtException Error when getting Identity Verification Provider.
-     */
+    @Override
     public boolean isIdVProviderExists(String idVPUuid, int tenantId) throws IdVProviderMgtException {
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false);
@@ -133,26 +125,20 @@ public class IdVProviderManagementDAO {
         }
     }
 
-    /**
-     * Add Identity Verification Provider.
-     *
-     * @param identityVerificationProvider Identity Verification Provider.
-     * @param tenantId                     Tenant ID.
-     * @throws IdVProviderMgtException Identity Verification Provider Management Exception.
-     */
+    @Override
     public void addIdVProvider(IdentityVerificationProvider identityVerificationProvider, int tenantId)
             throws IdVProviderMgtException {
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false);
              PreparedStatement addIdVProviderStmt = connection.prepareStatement(ADD_IDVP_SQL)) {
-            addIdVProviderStmt.setString(1, identityVerificationProvider.getIdVPUUID());
+            addIdVProviderStmt.setString(1, identityVerificationProvider.getIdVProviderUuid());
             addIdVProviderStmt.setInt(2, tenantId);
             addIdVProviderStmt.setString(3, identityVerificationProvider.getIdVProviderName());
             addIdVProviderStmt.setString(4, identityVerificationProvider.getIdVProviderDescription());
             addIdVProviderStmt.setBoolean(5, identityVerificationProvider.isEnabled());
             addIdVProviderStmt.executeUpdate();
 
-            IdentityVerificationProvider createdIDVP = getIDVPbyUUID(identityVerificationProvider.getIdVPUUID(),
+            IdentityVerificationProvider createdIDVP = getIDVPbyUUID(identityVerificationProvider.getIdVProviderUuid(),
                     tenantId, connection);
             // Get the id of the just added identity verification provider.
             int idPVId = Integer.parseInt(createdIDVP.getId());
@@ -167,14 +153,7 @@ public class IdVProviderManagementDAO {
         }
     }
 
-    /**
-     * Update Identity Verification Provider.
-     *
-     * @param oldIdVProvider     Old Identity Verification Provider.
-     * @param updatedIdVProvider Updated Identity Verification Provider.
-     * @param tenantId           Tenant ID.
-     * @throws IdVProviderMgtException Identity Verification Provider Management Exception.
-     */
+    @Override
     public void updateIdVProvider(IdentityVerificationProvider oldIdVProvider,
                                   IdentityVerificationProvider updatedIdVProvider, int tenantId)
             throws IdVProviderMgtException {
@@ -184,7 +163,7 @@ public class IdVProviderManagementDAO {
                 updateIdVProviderStmt.setString(1, updatedIdVProvider.getIdVProviderName());
                 updateIdVProviderStmt.setString(2, updatedIdVProvider.getIdVProviderDescription());
                 updateIdVProviderStmt.setBoolean(3, updatedIdVProvider.isEnabled());
-                updateIdVProviderStmt.setString(4, oldIdVProvider.getIdVPUUID());
+                updateIdVProviderStmt.setString(4, oldIdVProvider.getIdVProviderUuid());
                 updateIdVProviderStmt.setInt(5, tenantId);
                 updateIdVProviderStmt.executeUpdate();
 
@@ -200,14 +179,7 @@ public class IdVProviderManagementDAO {
         }
     }
 
-    /**
-     * Get Identity Verification Providers.
-     *
-     * @param limit    Limit.
-     * @param offset   Offset.
-     * @param tenantId Tenant ID.
-     * @throws IdVProviderMgtException Identity Verification Provider Management Exception.
-     */
+    @Override
     public List<IdentityVerificationProvider> getIdVProviders(Integer limit, Integer offset, int tenantId)
             throws IdVProviderMgtException {
 
@@ -267,13 +239,7 @@ public class IdVProviderManagementDAO {
         return count;
     }
 
-    /**
-     * Get Identity Verification Provider by name.
-     *
-     * @param idVPName Identity Verification Provider name.
-     * @param tenantId Tenant ID.
-     * @throws IdVProviderMgtException Identity Verification Provider Management Exception.
-     */
+    @Override
     public IdentityVerificationProvider getIdVPByName(String idVPName, int tenantId) throws IdVProviderMgtException {
 
         IdentityVerificationProvider identityVerificationProvider = null;

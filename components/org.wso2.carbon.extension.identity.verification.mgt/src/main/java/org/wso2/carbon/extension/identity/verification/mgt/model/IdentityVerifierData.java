@@ -25,18 +25,18 @@ import java.util.List;
  */
 public class IdentityVerifierData {
 
-    String identityVerifierName;
+    String identityVerificationProviderId;
     List<IdVClaim> idVClaims;
     List<IdVProperty> idVProperties;
 
-    public String getIdentityVerifierName() {
+    public String getIdentityVerificationProviderId() {
 
-        return identityVerifierName;
+        return identityVerificationProviderId;
     }
 
-    public void setIdentityVerifierName(String identityVerifierName) {
+    public void setIdentityVerificationProviderId(String identityVerificationProviderId) {
 
-        this.identityVerifierName = identityVerifierName;
+        this.identityVerificationProviderId = identityVerificationProviderId;
     }
 
     public List<IdVClaim> getIdVClaims() {

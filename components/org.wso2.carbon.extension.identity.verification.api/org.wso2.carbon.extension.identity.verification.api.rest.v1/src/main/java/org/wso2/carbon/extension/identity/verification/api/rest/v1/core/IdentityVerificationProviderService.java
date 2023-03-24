@@ -213,7 +213,7 @@ public class IdentityVerificationProviderService {
                                                                identityVerificationProvider) {
 
         IdVProviderResponse idvProviderResponse = new IdVProviderResponse();
-        idvProviderResponse.setId(identityVerificationProvider.getIdVPUUID());
+        idvProviderResponse.setId(identityVerificationProvider.getIdVProviderUuid());
         idvProviderResponse.setName(identityVerificationProvider.getIdVProviderName());
         idvProviderResponse.setIsEnabled(identityVerificationProvider.isEnabled());
         idvProviderResponse.setDescription(identityVerificationProvider.getIdVProviderDescription());
@@ -253,7 +253,7 @@ public class IdentityVerificationProviderService {
                                                                   IdVProviderRequest idVProviderRequest) {
 
         IdentityVerificationProvider identityVerificationProvider = new IdentityVerificationProvider();
-        identityVerificationProvider.setIdVPUUID(oldIdVProvider.getIdVPUUID());
+        identityVerificationProvider.setIdVPUUID(oldIdVProvider.getIdVProviderUuid());
         identityVerificationProvider.setIdVProviderName(idVProviderRequest.getName());
         identityVerificationProvider.setIdVProviderDescription(idVProviderRequest.getDescription());
         identityVerificationProvider.setEnabled(idVProviderRequest.getIsEnabled());

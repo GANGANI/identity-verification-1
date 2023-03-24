@@ -27,7 +27,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationMgt;
-import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationMgtImpl;
+import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationManagement;
 import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerifierFactory;
 import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManager;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -48,7 +48,7 @@ public class IdentityVerificationServiceComponent {
     protected void activate(ComponentContext ctxt) {
 
         try {
-            IdentityVerificationMgt identityVerificationService = IdentityVerificationMgtImpl.getInstance();
+            IdentityVerificationMgt identityVerificationService = IdentityVerificationManagement.getInstance();
             ctxt.getBundleContext().registerService(IdentityVerificationMgt.class.getName(),
                     identityVerificationService, null);
             log.info("IdentityVerificationService bundle activated successfully.");

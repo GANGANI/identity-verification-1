@@ -20,9 +20,10 @@ package org.wso2.carbon.extension.identity.verification.provider;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderManagementDAO;
+import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAO;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtClientException;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtException;
+import org.wso2.carbon.extension.identity.verification.provider.internal.IdVProviderDataHolder;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVerificationProvider;
 import org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtConstants;
 import org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtExceptionManagement;
@@ -30,27 +31,35 @@ import org.wso2.carbon.identity.core.util.IdentityUtil;
 
 import java.util.List;
 
+import static org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtConstants.ErrorMessage.ERROR_CODE_GET_DAO;
+import static org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtConstants.ErrorMessage.ERROR_EMPTY_IDVP_NAME;
+import static org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtConstants.ErrorMessage.ERROR_IDVP_ALREADY_EXISTS;
+
 /**
  * This class contains the implementation for the IdVProviderManager.
  */
 public class IdVProviderManagerImpl implements IdVProviderManager {
 
     private static final Log log = LogFactory.getLog(IdVProviderManagerImpl.class);
-    IdVProviderManagementDAO idVProviderManagementDAO = new IdVProviderManagementDAO();
-    private static final IdVProviderManagerImpl instance = new IdVProviderManagerImpl();
+    private final List<IdVProviderDAO> idVProviderDAOs;
 
-    private IdVProviderManagerImpl() {
+    public IdVProviderManagerImpl() {
 
+        this.idVProviderDAOs = IdVProviderDataHolder.getInstance().getIdVProviderDAOs();
     }
 
     /**
-     * Get the instance of IdVProviderManagerImpl.
+     * Select highest priority IdVProvider DAO from an already sorted list of IdVProvider DAOs.
      *
-     * @return IdVProviderManagerImpl.
+     * @return Highest priority Resource DAO.
      */
-    public static IdVProviderManagerImpl getInstance() {
+    private IdVProviderDAO getIdVProviderDAO() throws IdVProviderMgtException {
 
-        return instance;
+        if (!this.idVProviderDAOs.isEmpty()) {
+            return idVProviderDAOs.get(idVProviderDAOs.size() - 1);
+        } else {
+            throw IdVProviderMgtExceptionManagement.handleServerException(ERROR_CODE_GET_DAO);
+        }
     }
 
     @Override
@@ -61,7 +70,7 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
             throw IdVProviderMgtExceptionManagement.handleClientException(IdVProviderMgtConstants.ErrorMessage.
                     ERROR_EMPTY_IDVP_ID);
         }
-        return idVProviderManagementDAO.getIdVProvider(idVProviderId, tenantId);
+        return getIdVProviderDAO().getIdVProvider(idVProviderId, tenantId);
     }
 
     @Override
@@ -69,20 +78,20 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
                                                        int tenantId) throws IdVProviderMgtException {
 
         validateAddIdPVInputValues(identityVerificationProvider.getIdVProviderName(), tenantId);
-        idVProviderManagementDAO.addIdVProvider(identityVerificationProvider, tenantId);
+        this.getIdVProviderDAO().addIdVProvider(identityVerificationProvider, tenantId);
         return identityVerificationProvider;
     }
 
     @Override
     public int getCountOfIdVProviders(int tenantId) throws IdVProviderMgtException {
 
-        return idVProviderManagementDAO.getCountOfIdVProviders(tenantId);
+        return getIdVProviderDAO().getCountOfIdVProviders(tenantId);
     }
 
     @Override
     public void deleteIdVProvider(String idVProviderId, int tenantId) throws IdVProviderMgtException {
 
-        idVProviderManagementDAO.deleteIdVProvider(idVProviderId, tenantId);
+        getIdVProviderDAO().deleteIdVProvider(idVProviderId, tenantId);
     }
 
     @Override
@@ -90,7 +99,7 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
                                                           IdentityVerificationProvider updatedIdVProvider,
                                                           int tenantId) throws IdVProviderMgtException {
 
-        idVProviderManagementDAO.updateIdVProvider(oldIdVProvider, updatedIdVProvider, tenantId);
+        getIdVProviderDAO().updateIdVProvider(oldIdVProvider, updatedIdVProvider, tenantId);
         return updatedIdVProvider;
     }
 
@@ -98,13 +107,13 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
     public List<IdentityVerificationProvider> getIdVProviders(Integer limit, Integer offset, int tenantId)
             throws IdVProviderMgtException {
 
-        return idVProviderManagementDAO.getIdVProviders(validateLimit(limit), validateOffset(offset), tenantId);
+        return getIdVProviderDAO().getIdVProviders(validateLimit(limit), validateOffset(offset), tenantId);
     }
 
     @Override
     public boolean isIdVProviderExists(String idvProviderId, int tenantId) throws IdVProviderMgtException {
 
-        return idVProviderManagementDAO.isIdVProviderExists(idvProviderId, tenantId);
+        return getIdVProviderDAO().isIdVProviderExists(idvProviderId, tenantId);
     }
 
     @Override
@@ -112,11 +121,10 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
             throws IdVProviderMgtException {
 
         if (StringUtils.isEmpty(idVPName)) {
-            throw IdVProviderMgtExceptionManagement.handleServerException(IdVProviderMgtConstants.ErrorMessage.
-                    ERROR_EMPTY_IDVP_NAME);
+            throw IdVProviderMgtExceptionManagement.handleServerException(ERROR_EMPTY_IDVP_NAME);
         }
 
-        return idVProviderManagementDAO.getIdVPByName(idVPName, tenantId);
+        return getIdVProviderDAO().getIdVPByName(idVPName, tenantId);
     }
 
 
@@ -130,8 +138,7 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
     private void validateAddIdPVInputValues(String idVPName, int tenantId) throws IdVProviderMgtException {
 
         if (getIdVPByName(idVPName, tenantId) != null) {
-            throw IdVProviderMgtExceptionManagement.handleClientException(IdVProviderMgtConstants.ErrorMessage.
-                    ERROR_IDVP_ALREADY_EXISTS, idVPName);
+            throw IdVProviderMgtExceptionManagement.handleClientException(ERROR_IDVP_ALREADY_EXISTS, idVPName);
         }
     }
 

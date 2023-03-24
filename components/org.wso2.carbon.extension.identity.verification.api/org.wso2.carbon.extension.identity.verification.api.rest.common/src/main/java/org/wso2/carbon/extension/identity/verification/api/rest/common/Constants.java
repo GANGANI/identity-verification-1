@@ -76,6 +76,9 @@ public class Constants {
                 "Provided IdVP id: %s is not found."),
         ERROR_CODE_IDV_CLAIM_CONFLICT("10004", "Identity verification claim data already exists.",
                 "Identity verification claim data already exists for the user: %s."),
+        ERROR_CODE_INCOMPLETE_UPDATE_REQUEST("10004",
+                "Incomplete identity verification claim update request.",
+                "The update request body is incomplete of Identity verification claim: %s."),
 
         // Server errors - IDVP user APIs.
         ERROR_RETRIEVING_IDV_CLAIM_METADATA("15000",

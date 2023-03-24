@@ -81,7 +81,7 @@ public interface IdentityVerificationMgt {
      * @param tenantId   Tenant Id.
      * @throws IdentityVerificationException IdentityVerificationException.
      */
-    IdVClaim updateIdVClaim(IdVClaim idvClaim, int tenantId) throws IdentityVerificationException;
+    IdVClaim updateIdVClaim(String userId, IdVClaim idvClaim, int tenantId) throws IdentityVerificationException;
 
     /**
      * Delete the IdVClaim.
