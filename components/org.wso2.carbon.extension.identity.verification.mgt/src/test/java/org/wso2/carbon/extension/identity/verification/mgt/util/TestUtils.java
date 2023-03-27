@@ -33,7 +33,7 @@ import static org.mockito.Mockito.spy;
 public class TestUtils {
 
     public static final String H2_SCRIPT_NAME = "h2.sql";
-    private static final String DB_NAME = "Config";
+    public static final String DB_NAME = "Config";
     private static Connection connection;
     public static Map<String, BasicDataSource> dataSourceMap = new HashMap<>();
 

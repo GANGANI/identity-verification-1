@@ -29,6 +29,13 @@ import java.util.List;
 public interface IdentityVerificationClaimDAO {
 
     /**
+     * Get priority value for the {@link IdentityVerificationClaimDAO}.
+     *
+     * @return Priority value for the DAO.
+     */
+    int getPriority();
+
+    /**
      * Add the identity verification claim.
      *
      * @param idvClaimList IDV claim list.
@@ -69,11 +76,12 @@ public interface IdentityVerificationClaimDAO {
     /**
      * Delete the identity verification claim.
      *
+     * @param userId    User id.
      * @param idVClaimId Identity verification claim id.
      * @param tenantId   Tenant id.
-     * @throws IdVClaimMgtException Identity verification exception.
+     * @throws IdentityVerificationException Identity verification exception.
      */
-    void deleteIdVClaim(String idVClaimId, int tenantId) throws IdentityVerificationException;
+    void deleteIdVClaim(String userId, String idVClaimId, int tenantId) throws IdentityVerificationException;
 
     /**
      * Check whether the identity verification claim exist.
@@ -96,5 +104,5 @@ public interface IdentityVerificationClaimDAO {
      * @return True if the identity verification claim exist.
      * @throws IdentityVerificationException Identity verification exception.
      */
-    public boolean isIdVClaimExist(String claimId, int tenantId) throws IdentityVerificationException;
+    boolean isIdVClaimExist(String claimId, int tenantId) throws IdentityVerificationException;
 }

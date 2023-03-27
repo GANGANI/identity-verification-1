@@ -18,10 +18,14 @@
 package org.wso2.carbon.extension.identity.verification.mgt.internal;
 
 import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerifierFactory;
+import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAO;
 import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManager;
+import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAO;
 import org.wso2.carbon.user.core.service.RealmService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,11 +33,11 @@ import java.util.Map;
  */
 public class IdentityVerificationDataHolder {
 
-    private Map<String, IdentityVerifierFactory> identityVerifierFactoryMap;
-    private RealmService realmService;
-    private IdVProviderManager idVProviderManager;
-
-    private static final IdentityVerificationDataHolder instance = new IdentityVerificationDataHolder();
+    private static Map<String, IdentityVerifierFactory> identityVerifierFactoryMap;
+    private static RealmService realmService;
+    private static IdVProviderManager idVProviderManager;
+    List<IdentityVerificationClaimDAO> idVClaimDAOs = new ArrayList<>();
+    private static IdentityVerificationDataHolder instance = new IdentityVerificationDataHolder();
 
     private IdentityVerificationDataHolder() {
 
@@ -127,5 +131,15 @@ public class IdentityVerificationDataHolder {
     public void unbindIdentityVerifierFactory(IdentityVerifierFactory identityVerifierFactory) {
 
         identityVerifierFactoryMap.remove(identityVerifierFactory.getIdentityVerifierName());
+    }
+
+    public List<IdentityVerificationClaimDAO> getIdVClaimDAOs() {
+
+        return idVClaimDAOs;
+    }
+
+    public void setIdVClaimDAOs(List<IdentityVerificationClaimDAO> idVClaimDAOs) {
+
+        this.idVClaimDAOs = idVClaimDAOs;
     }
 }

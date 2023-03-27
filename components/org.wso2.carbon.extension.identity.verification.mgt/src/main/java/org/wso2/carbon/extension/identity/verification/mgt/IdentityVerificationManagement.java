@@ -28,9 +28,11 @@ import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVer
 import org.wso2.carbon.extension.identity.verification.mgt.internal.IdentityVerificationDataHolder;
 import org.wso2.carbon.extension.identity.verification.mgt.model.IdVClaim;
 import org.wso2.carbon.extension.identity.verification.mgt.model.IdentityVerifierData;
+import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAO;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtException;
 import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants;
 import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationExceptionMgt;
+import org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtExceptionManagement;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
@@ -39,6 +41,8 @@ import org.wso2.carbon.user.core.service.RealmService;
 
 import java.util.List;
 
+import static org.wso2.carbon.extension.identity.verification.provider.util.IdVProviderMgtConstants.ErrorMessage.ERROR_CODE_GET_DAO;
+
 /**
  * This class contains the implementation for the IdentityVerificationService.
  */
@@ -46,21 +50,26 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
 
     private static final Log log = LogFactory.getLog(IdentityVerificationManagement.class);
 
-    private final IdentityVerificationClaimDAO identityVerificationClaimDAO = new IdentityVerificationClaimDAOImpl();
-    private static final IdentityVerificationManagement instance = new IdentityVerificationManagement();
+    private final List<IdentityVerificationClaimDAO> idVClaimDAOs;
 
-    private IdentityVerificationManagement() {
+    public IdentityVerificationManagement() {
 
+        this.idVClaimDAOs = IdentityVerificationDataHolder.getInstance().getIdVClaimDAOs();
     }
 
     /**
-     * Get the instance of IdentityVerificationMgtImpl.
+     * Select highest priority IdVProvider DAO from an already sorted list of IdVProvider DAOs.
      *
-     * @return IdentityVerificationMgtImpl.
+     * @return Highest priority Resource DAO.
      */
-    public static IdentityVerificationManagement getInstance() {
+    private IdentityVerificationClaimDAO getIdVClaimDAO() throws IdentityVerificationException {
 
-        return instance;
+        if (!this.idVClaimDAOs.isEmpty()) {
+            return idVClaimDAOs.get(idVClaimDAOs.size() - 1);
+        } else {
+            //todo
+            throw IdentityVerificationExceptionMgt.handleServerException(null);
+        }
     }
 
     @Override
@@ -93,7 +102,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
-        return identityVerificationClaimDAO.getIDVClaim(userId, idvClaimId, tenantId);
+        return getIdVClaimDAO().getIDVClaim(userId, idvClaimId, tenantId);
     }
 
     @Override
@@ -107,7 +116,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
         for (IdVClaim idVClaim : idVClaims) {
             validateAddIDVClaimInputs(userId, idVClaim, tenantId);
         }
-        identityVerificationClaimDAO.addIdVClaimList(idVClaims, tenantId);
+        getIdVClaimDAO().addIdVClaimList(idVClaims, tenantId);
         return idVClaims;
     }
 
@@ -128,7 +137,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_EMPTY_CLAIM_METADATA, null);
         }
-        identityVerificationClaimDAO.updateIdVClaim(idvClaim, tenantId);
+        getIdVClaimDAO().updateIdVClaim(idvClaim, tenantId);
         return idvClaim;
     }
 
@@ -139,7 +148,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
-        identityVerificationClaimDAO.deleteIdVClaim(idvClaimId, tenantId);
+        getIdVClaimDAO().deleteIdVClaim(userId, idvClaimId, tenantId);
     }
 
     @Override
@@ -149,14 +158,14 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
         }
-        return identityVerificationClaimDAO.getIDVClaims(userId, tenantId);
+        return getIdVClaimDAO().getIDVClaims(userId, tenantId);
     }
 
     @Override
     public boolean isIdVClaimDataExists(String userId, String idvId, String uri, int tenantId)
             throws IdentityVerificationException {
 
-        return identityVerificationClaimDAO.isIdVClaimDataExist(userId, idvId, uri, tenantId);
+        return getIdVClaimDAO().isIdVClaimDataExist(userId, idvId, uri, tenantId);
     }
 
     private void validateAddIDVClaimInputs(String userId, IdVClaim idVClaim, int tenantId)
@@ -219,7 +228,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
     @Override
     public boolean isIdVClaimExists(String idVClaimId, int tenantId) throws IdentityVerificationException {
 
-        return identityVerificationClaimDAO.isIdVClaimExist(idVClaimId, tenantId);
+        return getIdVClaimDAO().isIdVClaimExist(idVClaimId, tenantId);
     }
 
     private UniqueIDUserStoreManager getUniqueIdEnabledUserStoreManager(RealmService realmService, String tenantDomain)

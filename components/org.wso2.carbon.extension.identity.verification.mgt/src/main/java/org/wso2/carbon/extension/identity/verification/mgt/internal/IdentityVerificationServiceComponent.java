@@ -29,8 +29,17 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationMgt;
 import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationManagement;
 import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerifierFactory;
+import org.wso2.carbon.extension.identity.verification.mgt.dao.CachedBackedIdVClaimDAO;
+import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAO;
+import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAOImpl;
 import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManager;
+import org.wso2.carbon.extension.identity.verification.provider.dao.CachedBackedIdVProviderDAO;
+import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAO;
+import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAOImpl;
+import org.wso2.carbon.extension.identity.verification.provider.internal.IdVProviderDataHolder;
 import org.wso2.carbon.user.core.service.RealmService;
+
+import java.util.Comparator;
 
 /**
  * OSGi declarative services component which handles registration and un-registration of
@@ -48,7 +57,10 @@ public class IdentityVerificationServiceComponent {
     protected void activate(ComponentContext ctxt) {
 
         try {
-            IdentityVerificationMgt identityVerificationService = IdentityVerificationManagement.getInstance();
+            IdentityVerificationClaimDAO identityVerificationClaimDAO = new IdentityVerificationClaimDAOImpl();
+            ctxt.getBundleContext().registerService(IdentityVerificationClaimDAO.class.getName(),
+                    new CachedBackedIdVClaimDAO(identityVerificationClaimDAO), null);
+            IdentityVerificationMgt identityVerificationService = new IdentityVerificationManagement();
             ctxt.getBundleContext().registerService(IdentityVerificationMgt.class.getName(),
                     identityVerificationService, null);
             log.info("IdentityVerificationService bundle activated successfully.");
@@ -115,5 +127,33 @@ public class IdentityVerificationServiceComponent {
     protected void unsetIdVProviderManager(IdVProviderManager idVProviderManager) {
 
         IdentityVerificationDataHolder.getInstance().setIdVProviderManager(null);
+    }
+
+    @Reference(
+            name = "idvclaim.dao",
+            service = org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAO.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetIdVClaimDAO"
+    )
+    protected void setIdVClaimDAO(IdentityVerificationClaimDAO identityVerificationClaimDAO) {
+
+        if (identityVerificationClaimDAO != null) {
+            if (log.isDebugEnabled()) {
+                log.debug("idVProviderDAO is registered in IdVProviderMgtService service.");
+            }
+
+            IdentityVerificationDataHolder.getInstance().getIdVClaimDAOs().add(identityVerificationClaimDAO);
+            IdentityVerificationDataHolder.getInstance().getIdVClaimDAOs().
+                    sort(Comparator.comparingInt(IdentityVerificationClaimDAO::getPriority));
+        }
+    }
+
+    protected void unsetIdVClaimDAO(IdentityVerificationClaimDAO identityVerificationClaimDAO) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("IdVProviderDAO is unregistered in IdentityVerificationService service.");
+        }
+        IdentityVerificationDataHolder.getInstance().getIdVClaimDAOs().remove(identityVerificationClaimDAO);
     }
 }

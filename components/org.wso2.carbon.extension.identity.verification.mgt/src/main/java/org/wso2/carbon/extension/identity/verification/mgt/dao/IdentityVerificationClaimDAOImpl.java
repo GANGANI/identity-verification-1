@@ -59,6 +59,12 @@ import static org.wso2.carbon.extension.identity.verification.mgt.utils.Identity
 public class IdentityVerificationClaimDAOImpl implements IdentityVerificationClaimDAO {
 
     @Override
+    public int getPriority() {
+
+        return 2;
+    }
+
+    @Override
     public void addIdVClaimList(List<IdVClaim> idvClaimList, int tenantId) throws IdentityVerificationException {
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false)) {
@@ -160,12 +166,13 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
     }
 
     @Override
-    public void deleteIdVClaim(String idVClaimId, int tenantId) throws IdentityVerificationException {
+    public void deleteIdVClaim(String userId, String idVClaimId, int tenantId) throws IdentityVerificationException {
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false);
              PreparedStatement deleteIdVProviderStmt = connection.prepareStatement(DELETE_IDV_CLAIM_SQL)) {
-            deleteIdVProviderStmt.setString(1, idVClaimId);
-            deleteIdVProviderStmt.setInt(2, tenantId);
+            deleteIdVProviderStmt.setString(1, userId);
+            deleteIdVProviderStmt.setString(2, idVClaimId);
+            deleteIdVProviderStmt.setInt(3, tenantId);
             deleteIdVProviderStmt.executeUpdate();
             IdentityDatabaseUtil.commitTransaction(connection);
         } catch (SQLException e) {

@@ -63,7 +63,7 @@ public class CachedBackedIdVProviderDAO implements IdVProviderDAO {
             }
         } else {
             if (log.isDebugEnabled()) {
-                String message = String.format("Cache miss for secret by it's id: %s. Tenant id: " +
+                String message = String.format("Cache miss for IdVProvider by it's id: %s. Tenant id: " +
                         "%d", idVProviderUuid, tenantId);
                 log.debug(message);
             }

@@ -44,11 +44,6 @@ public abstract class AbstractIdentityVerifier implements IdentityVerifier {
         }
     }
 
-    public IdentityVerificationManagement getIdVMgtInstance() {
-
-        return IdentityVerificationManagement.getInstance();
-    }
-
     public IdVConfigProperty[] getIdVConfigProperties(IdentityVerificationProvider identityVerificationProvider) {
 
         return identityVerificationProvider.getIdVConfigProperties();
@@ -62,7 +57,8 @@ public abstract class AbstractIdentityVerifier implements IdentityVerifier {
     public List<IdVClaim> storeIdVClaims(String userId, List<IdVClaim> idVClaims, int tenantId) {
 
         try {
-            return getIdVMgtInstance().addIdVClaims(userId, idVClaims, tenantId);
+            IdentityVerificationMgt identityVerificationMgt = new IdentityVerificationManagement();
+            return identityVerificationMgt.addIdVClaims(userId, idVClaims, tenantId);
         } catch (IdentityVerificationException e) {
             throw new RuntimeException(e);
         }
@@ -71,7 +67,8 @@ public abstract class AbstractIdentityVerifier implements IdentityVerifier {
     public IdVClaim updateIdVClaims(String userId, IdVClaim idvClaim, int tenantId) {
 
         try {
-            return getIdVMgtInstance().updateIdVClaim(userId, idvClaim, tenantId);
+            IdentityVerificationMgt identityVerificationMgt = new IdentityVerificationManagement();
+            return identityVerificationMgt.updateIdVClaim(userId, idvClaim, tenantId);
         } catch (IdentityVerificationException e) {
             throw new RuntimeException(e);
         }
