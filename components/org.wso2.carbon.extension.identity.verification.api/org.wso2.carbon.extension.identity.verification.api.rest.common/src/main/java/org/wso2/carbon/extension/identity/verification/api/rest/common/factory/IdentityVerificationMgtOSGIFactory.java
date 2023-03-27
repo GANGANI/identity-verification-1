@@ -20,15 +20,15 @@ package org.wso2.carbon.extension.identity.verification.api.rest.common.factory;
 
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationMgt;
+import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationManager;
 
 /**
  * Factory Beans serves as a factory for creating other beans within the IOC container. This factory bean is used to
  * instantiate the IdentityVerificationServiceOSGIFactory inside the container.
  */
-public class IdentityVerificationMgtOSGIFactory extends AbstractFactoryBean<IdentityVerificationMgt> {
+public class IdentityVerificationMgtOSGIFactory extends AbstractFactoryBean<IdentityVerificationManager> {
 
-    private IdentityVerificationMgt identityVerificationMgt;
+    private IdentityVerificationManager identityVerificationMgt;
 
     @Override
     public Class<?> getObjectType() {
@@ -37,12 +37,12 @@ public class IdentityVerificationMgtOSGIFactory extends AbstractFactoryBean<Iden
     }
 
     @Override
-    protected IdentityVerificationMgt createInstance() throws Exception {
+    protected IdentityVerificationManager createInstance() throws Exception {
 
         if (this.identityVerificationMgt == null) {
-            IdentityVerificationMgt identityVerificationMgt = (IdentityVerificationMgt)
+            IdentityVerificationManager identityVerificationMgt = (IdentityVerificationManager)
                     (PrivilegedCarbonContext.getThreadLocalCarbonContext()
-                            .getOSGiService(IdentityVerificationMgt.class, null));
+                            .getOSGiService(IdentityVerificationManager.class, null));
             if (identityVerificationMgt != null) {
                 this.identityVerificationMgt = identityVerificationMgt;
             } else {

@@ -86,7 +86,8 @@ public class IdentityVerificationConstants {
         ERROR_ADDING_IDV_CLAIMS("65011", "Error adding the Identity Verification Claims."),
         ERROR_RETRIEVING_IDV_CLAIMS("65012", "Error retrieving the Identity Verification Claims."),
         ERROR_VALIDATING_IDV_PROVIDER_ID("65013", "Error while validating identity provider id."),
-        ERROR_CHECKING_USER_ID_EXISTENCE("65014", "Error while checking the user id existence.");
+        ERROR_CHECKING_USER_ID_EXISTENCE("65014", "Error while checking the user id existence."),
+        ERROR_CODE_GET_DAO("65015", "No IdV Claim DAOs are registered.");
 
         private final String code;
         private final String message;

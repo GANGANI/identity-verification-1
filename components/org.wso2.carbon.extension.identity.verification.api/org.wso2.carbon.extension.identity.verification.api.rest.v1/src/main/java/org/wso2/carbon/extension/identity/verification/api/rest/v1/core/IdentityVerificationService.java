@@ -223,7 +223,6 @@ public class IdentityVerificationService {
         List<IdVClaim> idVClaimList = new ArrayList<>();
         for (VerificationClaimRequest verificationClaim : verificationClaimRequest) {
             IdVClaim idVClaim = new IdVClaim();
-            idVClaim.setUuid(UUID.randomUUID().toString());
             idVClaim.setUserId(userId);
             idVClaim.setClaimUri(verificationClaim.getUri());
             idVClaim.setStatus(verificationClaim.getIsVerified());

@@ -20,7 +20,6 @@ package org.wso2.carbon.extension.identity.verification.mgt.dao;
 import org.json.JSONObject;
 import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVerificationException;
 import org.wso2.carbon.extension.identity.verification.mgt.model.IdVClaim;
-import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants;
 import org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationExceptionMgt;
 import org.wso2.carbon.identity.core.util.IdentityDatabaseUtil;
 
@@ -75,7 +74,7 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
                     addIdVProviderStmt.setString(3, idVClaim.getClaimUri());
                     addIdVProviderStmt.setString(4, idVClaim.getIdVPId());
                     addIdVProviderStmt.setInt(5, tenantId);
-                    addIdVProviderStmt.setBoolean(6, idVClaim.getStatus());
+                    addIdVProviderStmt.setString(6, idVClaim.getStatus() ? "1" : "0");
                     addIdVProviderStmt.setBytes(7, getMetadata(idVClaim));
                     addIdVProviderStmt.executeUpdate();
                 } catch (SQLException e1) {
@@ -92,7 +91,10 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false)) {
             try (PreparedStatement updateIdVProviderStmt = connection.prepareStatement(UPDATE_IDV_CLAIM_SQL)) {
-                updateIdVProviderStmt.setBoolean(1, idVClaim.getStatus());
+                if (idVClaim.getStatus()) {
+
+                }
+                updateIdVProviderStmt.setString(1, idVClaim.getStatus() ? "1" : "0");
                 updateIdVProviderStmt.setObject(2, getMetadata(idVClaim));
                 updateIdVProviderStmt.setString(3, idVClaim.getUserId());
                 updateIdVProviderStmt.setString(4, idVClaim.getUuid());
@@ -162,12 +164,13 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
     }
 
     @Override
-    public void deleteIdVClaim(String idVClaimId, int tenantId) throws IdentityVerificationException {
+    public void deleteIdVClaim(String userId, String idVClaimId, int tenantId) throws IdentityVerificationException {
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false);
              PreparedStatement deleteIdVProviderStmt = connection.prepareStatement(DELETE_IDV_CLAIM_SQL)) {
-            deleteIdVProviderStmt.setString(1, idVClaimId);
-            deleteIdVProviderStmt.setInt(2, tenantId);
+            deleteIdVProviderStmt.setString(1, userId);
+            deleteIdVProviderStmt.setString(2, idVClaimId);
+            deleteIdVProviderStmt.setInt(3, tenantId);
             deleteIdVProviderStmt.executeUpdate();
             IdentityDatabaseUtil.commitTransaction(connection);
         } catch (SQLException e) {

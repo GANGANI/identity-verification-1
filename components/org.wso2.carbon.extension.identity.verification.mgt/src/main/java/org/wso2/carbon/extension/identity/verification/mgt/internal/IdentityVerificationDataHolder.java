@@ -33,11 +33,11 @@ import java.util.Map;
  */
 public class IdentityVerificationDataHolder {
 
-    private static Map<String, IdentityVerifierFactory> identityVerifierFactoryMap;
-    private static RealmService realmService;
-    private static IdVProviderManager idVProviderManager;
-    List<IdentityVerificationClaimDAO> idVClaimDAOs = new ArrayList<>();
-    private static IdentityVerificationDataHolder instance = new IdentityVerificationDataHolder();
+    private Map<String, IdentityVerifierFactory> identityVerifierFactoryMap;
+    private RealmService realmService;
+    private IdVProviderManager idVProviderManager;
+    private List<IdentityVerificationClaimDAO> idVClaimDAOs = new ArrayList<>();
+    private static final IdentityVerificationDataHolder instance = new IdentityVerificationDataHolder();
 
     private IdentityVerificationDataHolder() {
 
@@ -93,7 +93,7 @@ public class IdentityVerificationDataHolder {
      */
     public void setIdVProviderManager(IdVProviderManager idVProviderManager) {
 
-        IdentityVerificationDataHolder.idVProviderManager = idVProviderManager;
+        this.idVProviderManager = idVProviderManager;
     }
 
     /**
@@ -138,7 +138,7 @@ public class IdentityVerificationDataHolder {
         return idVClaimDAOs;
     }
 
-    public void setIdVProviderDAOs(List<IdentityVerificationClaimDAO> idVClaimDAOs) {
+    public void setIdVClaimDAOs(List<IdentityVerificationClaimDAO> idVClaimDAOs) {
 
         this.idVClaimDAOs = idVClaimDAOs;
     }

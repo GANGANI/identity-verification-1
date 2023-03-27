@@ -135,7 +135,7 @@ public class IdVProviderDAOImpl implements IdVProviderDAO {
             addIdVProviderStmt.setInt(2, tenantId);
             addIdVProviderStmt.setString(3, identityVerificationProvider.getIdVProviderName());
             addIdVProviderStmt.setString(4, identityVerificationProvider.getIdVProviderDescription());
-            addIdVProviderStmt.setBoolean(5, identityVerificationProvider.isEnabled());
+            addIdVProviderStmt.setString(5, identityVerificationProvider.isEnabled() ? "1" : "0");
             addIdVProviderStmt.executeUpdate();
 
             IdentityVerificationProvider createdIDVP = getIDVPbyUUID(identityVerificationProvider.getIdVProviderUuid(),
@@ -162,7 +162,7 @@ public class IdVProviderDAOImpl implements IdVProviderDAO {
              PreparedStatement updateIdVProviderStmt = connection.prepareStatement(UPDATE_IDVP_SQL)) {
                 updateIdVProviderStmt.setString(1, updatedIdVProvider.getIdVProviderName());
                 updateIdVProviderStmt.setString(2, updatedIdVProvider.getIdVProviderDescription());
-                updateIdVProviderStmt.setBoolean(3, updatedIdVProvider.isEnabled());
+                updateIdVProviderStmt.setString(3, updatedIdVProvider.isEnabled() ? "1" : "0");
                 updateIdVProviderStmt.setString(4, oldIdVProvider.getIdVProviderUuid());
                 updateIdVProviderStmt.setInt(5, tenantId);
                 updateIdVProviderStmt.executeUpdate();

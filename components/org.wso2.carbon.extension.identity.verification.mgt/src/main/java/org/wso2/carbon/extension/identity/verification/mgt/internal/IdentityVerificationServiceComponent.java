@@ -26,13 +26,13 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationMgt;
-import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationManagement;
+import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationManager;
+import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationManagerImpl;
 import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerifierFactory;
+import org.wso2.carbon.extension.identity.verification.mgt.dao.CachedBackedIdVClaimDAO;
 import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAO;
+import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAOImpl;
 import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManager;
-import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAO;
-import org.wso2.carbon.extension.identity.verification.provider.internal.IdVProviderDataHolder;
 import org.wso2.carbon.user.core.service.RealmService;
 
 import java.util.Comparator;
@@ -53,8 +53,11 @@ public class IdentityVerificationServiceComponent {
     protected void activate(ComponentContext ctxt) {
 
         try {
-            IdentityVerificationMgt identityVerificationService = IdentityVerificationManagement.getInstance();
-            ctxt.getBundleContext().registerService(IdentityVerificationMgt.class.getName(),
+            IdentityVerificationClaimDAO identityVerificationClaimDAO = new IdentityVerificationClaimDAOImpl();
+            ctxt.getBundleContext().registerService(IdentityVerificationClaimDAO.class.getName(),
+                    new CachedBackedIdVClaimDAO(identityVerificationClaimDAO), null);
+            IdentityVerificationManager identityVerificationService = new IdentityVerificationManagerImpl();
+            ctxt.getBundleContext().registerService(IdentityVerificationManager.class.getName(),
                     identityVerificationService, null);
             log.info("IdentityVerificationService bundle activated successfully.");
             if (log.isDebugEnabled()) {
@@ -133,7 +136,7 @@ public class IdentityVerificationServiceComponent {
 
         if (identityVerificationClaimDAO != null) {
             if (log.isDebugEnabled()) {
-                log.debug("idVProviderDAO is registered in IdVProviderMgtService service.");
+                log.debug("idVClaimDAO is registered in IdentityVerificationMgtService.");
             }
 
             IdentityVerificationDataHolder.getInstance().getIdVClaimDAOs().add(identityVerificationClaimDAO);
@@ -145,7 +148,7 @@ public class IdentityVerificationServiceComponent {
     protected void unsetIdVClaimDAO(IdentityVerificationClaimDAO identityVerificationClaimDAO) {
 
         if (log.isDebugEnabled()) {
-            log.debug("IdVProviderDAO is unregistered in IdentityVerificationService service.");
+            log.debug("IdVClaimDAO is unregistered in IdentityVerificationService.");
         }
         IdentityVerificationDataHolder.getInstance().getIdVClaimDAOs().remove(identityVerificationClaimDAO);
     }

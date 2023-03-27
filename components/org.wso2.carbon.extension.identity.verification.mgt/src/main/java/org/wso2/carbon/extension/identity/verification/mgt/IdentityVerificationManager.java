@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * This interface of IdentityVerifierFactory to retrieve the required identity verifier.
  */
-public interface IdentityVerificationMgt {
+public interface IdentityVerificationManager {
 
     /**
      * Get the identity verifier data after processing the identity verification.

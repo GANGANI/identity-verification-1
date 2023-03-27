@@ -21,7 +21,7 @@ package org.wso2.carbon.extension.identity.verification.mgt;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAOImpl;
+import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAO;
 import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVerificationException;
 import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVerificationServerException;
 import org.wso2.carbon.extension.identity.verification.mgt.internal.IdentityVerificationDataHolder;
@@ -38,29 +38,38 @@ import org.wso2.carbon.user.core.common.User;
 import org.wso2.carbon.user.core.service.RealmService;
 
 import java.util.List;
+import java.util.UUID;
+
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_CODE_GET_DAO;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID;
 
 /**
  * This class contains the implementation for the IdentityVerificationService.
  */
-public class IdentityVerificationManagement implements IdentityVerificationMgt {
+public class IdentityVerificationManagerImpl implements IdentityVerificationManager {
 
-    private static final Log log = LogFactory.getLog(IdentityVerificationManagement.class);
+    private static final Log log = LogFactory.getLog(IdentityVerificationManagerImpl.class);
+    private final List<IdentityVerificationClaimDAO> idVClaimDAOs;
 
-    IdentityVerificationClaimDAOImpl identityVerificationClaimDAO = new IdentityVerificationClaimDAOImpl();
-    private static final IdentityVerificationManagement instance = new IdentityVerificationManagement();
+    public IdentityVerificationManagerImpl() {
 
-    private IdentityVerificationManagement() {
-
+        this.idVClaimDAOs = IdentityVerificationDataHolder.getInstance().getIdVClaimDAOs();
     }
 
     /**
-     * Get the instance of IdentityVerificationMgtImpl.
+     * Select highest priority IdVProvider DAO from an already sorted list of IdVClaim DAOs.
      *
-     * @return IdentityVerificationMgtImpl.
+     * @return Highest priority IdVClaim DAO.
+     *
+     * @throws IdentityVerificationException If an error occurs while getting the IdVClaim DAO.
      */
-    public static IdentityVerificationManagement getInstance() {
+    private IdentityVerificationClaimDAO getIdVClaimDAO() throws IdentityVerificationException {
 
-        return instance;
+        if (!this.idVClaimDAOs.isEmpty()) {
+            return idVClaimDAOs.get(idVClaimDAOs.size() - 1);
+        } else {
+            throw IdentityVerificationExceptionMgt.handleServerException(ERROR_CODE_GET_DAO);
+        }
     }
 
     @Override
@@ -68,8 +77,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
             throws IdentityVerificationException {
 
         if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
-            throw IdentityVerificationExceptionMgt.handleClientException(
-                    IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
+            throw IdentityVerificationExceptionMgt.handleClientException(ERROR_INVALID_USER_ID);
         }
         String identityVerifierName = identityVerifierData.getIdentityVerificationProviderId();
         IdentityVerifierFactory identityVerifierFactory =
@@ -91,9 +99,9 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
         }
         if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
-                    IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
+                    ERROR_INVALID_USER_ID);
         }
-        return identityVerificationClaimDAO.getIDVClaim(userId, idvClaimId, tenantId);
+        return getIdVClaimDAO().getIDVClaim(userId, idvClaimId, tenantId);
     }
 
     @Override
@@ -102,12 +110,13 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
 
         if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
-                    IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
+                    ERROR_INVALID_USER_ID);
         }
         for (IdVClaim idVClaim : idVClaims) {
+            idVClaim.setUuid(UUID.randomUUID().toString());
             validateAddIDVClaimInputs(userId, idVClaim, tenantId);
         }
-        identityVerificationClaimDAO.addIdVClaimList(idVClaims, tenantId);
+        getIdVClaimDAO().addIdVClaimList(idVClaims, tenantId);
         return idVClaims;
     }
 
@@ -122,13 +131,13 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
         }
         if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
-                    IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
+                    ERROR_INVALID_USER_ID);
         }
         if (idvClaim.getMetadata() == null) {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_EMPTY_CLAIM_METADATA, null);
         }
-        identityVerificationClaimDAO.updateIdVClaim(idvClaim, tenantId);
+        getIdVClaimDAO().updateIdVClaim(idvClaim, tenantId);
         return idvClaim;
     }
 
@@ -137,9 +146,9 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
 
         if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
-                    IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
+                    ERROR_INVALID_USER_ID);
         }
-        identityVerificationClaimDAO.deleteIdVClaim(idvClaimId, tenantId);
+        getIdVClaimDAO().deleteIdVClaim(userId, idvClaimId, tenantId);
     }
 
     @Override
@@ -147,16 +156,16 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
 
         if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
-                    IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
+                    ERROR_INVALID_USER_ID);
         }
-        return identityVerificationClaimDAO.getIDVClaims(userId, tenantId);
+        return getIdVClaimDAO().getIDVClaims(userId, tenantId);
     }
 
     @Override
     public boolean isIdVClaimDataExists(String userId, String idvId, String uri, int tenantId)
             throws IdentityVerificationException {
 
-        return identityVerificationClaimDAO.isIdVClaimDataExist(userId, idvId, uri, tenantId);
+        return getIdVClaimDAO().isIdVClaimDataExist(userId, idvId, uri, tenantId);
     }
 
     private void validateAddIDVClaimInputs(String userId, IdVClaim idVClaim, int tenantId)
@@ -220,7 +229,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
     @Override
     public boolean isIdVClaimExists(String idVClaimId, int tenantId) throws IdentityVerificationException {
 
-        return identityVerificationClaimDAO.isIdVClaimExist(idVClaimId, tenantId);
+        return getIdVClaimDAO().isIdVClaimExist(idVClaimId, tenantId);
     }
 
     private UniqueIDUserStoreManager getUniqueIdEnabledUserStoreManager(RealmService realmService, String tenantDomain)
@@ -233,7 +242,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
                 log.debug("Provided user store manager does not support unique user IDs.");
             }
             throw IdentityVerificationExceptionMgt.handleServerException(
-                    IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID);
+                    ERROR_INVALID_USER_ID);
         }
         return (UniqueIDUserStoreManager) userStoreManager;
     }
