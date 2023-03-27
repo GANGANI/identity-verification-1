@@ -69,7 +69,11 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
                     addIdVProviderStmt.setString(3, idVClaim.getClaimUri());
                     addIdVProviderStmt.setString(4, idVClaim.getIdVPId());
                     addIdVProviderStmt.setInt(5, tenantId);
-                    addIdVProviderStmt.setBoolean(6, idVClaim.getStatus());
+                    if (idVClaim.getStatus()) {
+                        addIdVProviderStmt.setString(6, "1");
+                    } else {
+                        addIdVProviderStmt.setString(6, "0");
+                    }
                     addIdVProviderStmt.setBytes(7, getMetadata(idVClaim));
                     addIdVProviderStmt.executeUpdate();
                 } catch (SQLException e1) {

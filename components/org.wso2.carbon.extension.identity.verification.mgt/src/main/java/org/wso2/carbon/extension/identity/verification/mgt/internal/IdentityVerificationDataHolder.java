@@ -29,16 +29,27 @@ import java.util.Map;
  */
 public class IdentityVerificationDataHolder {
 
-    private static Map<String, IdentityVerifierFactory> identityVerifierFactoryMap;
-    private static RealmService realmService;
-    private static IdVProviderManager idVProviderManager;
+    private Map<String, IdentityVerifierFactory> identityVerifierFactoryMap;
+    private RealmService realmService;
+    private IdVProviderManager idVProviderManager;
+
+    private static final IdentityVerificationDataHolder instance = new IdentityVerificationDataHolder();
+
+    private IdentityVerificationDataHolder() {
+
+    }
+
+    public static IdentityVerificationDataHolder getInstance() {
+
+        return instance;
+    }
 
     /**
      * Get the RealmService.
      *
      * @return RealmService.
      */
-    public static RealmService getRealmService() {
+    public RealmService getRealmService() {
 
         if (realmService == null) {
             throw new RuntimeException("RealmService was not set during the " +
@@ -52,9 +63,9 @@ public class IdentityVerificationDataHolder {
      *
      * @param realmService RealmService.
      */
-    public static void setRealmService(RealmService realmService) {
+    public void setRealmService(RealmService realmService) {
 
-        IdentityVerificationDataHolder.realmService = realmService;
+        this.realmService = realmService;
     }
 
     /**
@@ -62,7 +73,7 @@ public class IdentityVerificationDataHolder {
      *
      * @return IdVProviderManager.
      */
-    public static IdVProviderManager getIdVProviderManager() {
+    public IdVProviderManager getIdVProviderManager() {
 
         if (idVProviderManager == null) {
             throw new RuntimeException("IdVProviderManager was not set during the " +
@@ -76,9 +87,9 @@ public class IdentityVerificationDataHolder {
      *
      * @param idVProviderManager IdVProviderManager.
      */
-    public static void setIdVProviderManager(IdVProviderManager idVProviderManager) {
+    public void setIdVProviderManager(IdVProviderManager idVProviderManager) {
 
-        IdentityVerificationDataHolder.idVProviderManager = idVProviderManager;
+        this.idVProviderManager = idVProviderManager;
     }
 
     /**
@@ -86,7 +97,7 @@ public class IdentityVerificationDataHolder {
      *
      * @param identityVerifierFactory IdentityVerifierFactory.
      */
-    public static void setIdentityVerifierFactory(IdentityVerifierFactory identityVerifierFactory) {
+    public void setIdentityVerifierFactory(IdentityVerifierFactory identityVerifierFactory) {
 
         if (identityVerifierFactoryMap == null) {
             identityVerifierFactoryMap = new HashMap<>();
@@ -100,7 +111,7 @@ public class IdentityVerificationDataHolder {
      * @param identityVerifierName IdentityVerifierFactory name.
      * @return IdentityVerifierFactory.
      */
-    public static IdentityVerifierFactory getIdentityVerifierFactory(String identityVerifierName) {
+    public IdentityVerifierFactory getIdentityVerifierFactory(String identityVerifierName) {
 
         if (identityVerifierFactoryMap == null) {
             return null;
@@ -113,7 +124,7 @@ public class IdentityVerificationDataHolder {
      *
      * @param identityVerifierFactory IdentityVerifierFactory.
      */
-    public static void unbindIdentityVerifierFactory(IdentityVerifierFactory identityVerifierFactory) {
+    public void unbindIdentityVerifierFactory(IdentityVerifierFactory identityVerifierFactory) {
 
         identityVerifierFactoryMap.remove(identityVerifierFactory.getIdentityVerifierName());
     }

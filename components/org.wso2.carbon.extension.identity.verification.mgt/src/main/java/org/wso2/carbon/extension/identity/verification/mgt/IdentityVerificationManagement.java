@@ -21,6 +21,7 @@ package org.wso2.carbon.extension.identity.verification.mgt;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAO;
 import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAOImpl;
 import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVerificationException;
 import org.wso2.carbon.extension.identity.verification.mgt.exception.IdentityVerificationServerException;
@@ -34,7 +35,6 @@ import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.UniqueIDUserStoreManager;
-import org.wso2.carbon.user.core.common.User;
 import org.wso2.carbon.user.core.service.RealmService;
 
 import java.util.List;
@@ -46,7 +46,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
 
     private static final Log log = LogFactory.getLog(IdentityVerificationManagement.class);
 
-    IdentityVerificationClaimDAOImpl identityVerificationClaimDAO = new IdentityVerificationClaimDAOImpl();
+    private final IdentityVerificationClaimDAO identityVerificationClaimDAO = new IdentityVerificationClaimDAOImpl();
     private static final IdentityVerificationManagement instance = new IdentityVerificationManagement();
 
     private IdentityVerificationManagement() {
@@ -73,7 +73,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
         }
         String identityVerifierName = identityVerifierData.getIdentityVerificationProviderId();
         IdentityVerifierFactory identityVerifierFactory =
-                IdentityVerificationDataHolder.getIdentityVerifierFactory(identityVerifierName);
+                IdentityVerificationDataHolder.getInstance().getIdentityVerifierFactory(identityVerifierName);
         if (identityVerifierFactory == null) {
             // todo
             throw new IdentityVerificationException(identityVerifierName);
@@ -182,7 +182,8 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
     private boolean isValidIdVProviderId(String idvProviderId, int tenantId) throws IdentityVerificationException {
 
         try {
-            if (IdentityVerificationDataHolder.getIdVProviderManager().isIdVProviderExists(idvProviderId, tenantId)) {
+            if (IdentityVerificationDataHolder.getInstance().
+                    getIdVProviderManager().isIdVProviderExists(idvProviderId, tenantId)) {
                 return true;
             }
         } catch (IdVProviderMgtException e) {
@@ -197,10 +198,9 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
         UniqueIDUserStoreManager uniqueIDUserStoreManager;
         try {
             uniqueIDUserStoreManager =
-                    getUniqueIdEnabledUserStoreManager(IdentityVerificationDataHolder.getRealmService(),
+                    getUniqueIdEnabledUserStoreManager(IdentityVerificationDataHolder.getInstance().getRealmService(),
                             IdentityTenantUtil.getTenantDomain(tenantId));
-            User user = uniqueIDUserStoreManager.getUserWithID(userId, null, null);
-            if (user != null) {
+            if (uniqueIDUserStoreManager.isExistingUserWithID(userId)) {
                 return true;
             }
         } catch (UserStoreException e) {

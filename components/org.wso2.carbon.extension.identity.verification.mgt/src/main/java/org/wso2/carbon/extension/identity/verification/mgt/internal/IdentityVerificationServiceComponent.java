@@ -77,12 +77,12 @@ public class IdentityVerificationServiceComponent {
     )
     protected void setIdentityVerifierFactory(IdentityVerifierFactory identityVerifierFactory) {
 
-        IdentityVerificationDataHolder.setIdentityVerifierFactory(identityVerifierFactory);
+        IdentityVerificationDataHolder.getInstance().setIdentityVerifierFactory(identityVerifierFactory);
     }
 
     protected void unsetIdentityVerifierFactory(IdentityVerifierFactory identityVerifierFactory) {
 
-        IdentityVerificationDataHolder.unbindIdentityVerifierFactory(identityVerifierFactory);
+        IdentityVerificationDataHolder.getInstance().unbindIdentityVerifierFactory(identityVerifierFactory);
     }
 
     @Reference(
@@ -93,12 +93,12 @@ public class IdentityVerificationServiceComponent {
             unbind = "unsetRealmService")
     protected void setRealmService(RealmService realmService) {
 
-        IdentityVerificationDataHolder.setRealmService(realmService);
+        IdentityVerificationDataHolder.getInstance().setRealmService(realmService);
     }
 
     protected void unsetRealmService(RealmService realmService) {
 
-        IdentityVerificationDataHolder.setRealmService(null);
+        IdentityVerificationDataHolder.getInstance().setRealmService(null);
     }
 
     @Reference(
@@ -109,11 +109,11 @@ public class IdentityVerificationServiceComponent {
             unbind = "unsetIdVProviderManager")
     protected void setIdVProviderManager(IdVProviderManager idVProviderManager) {
 
-        IdentityVerificationDataHolder.setIdVProviderManager(idVProviderManager);
+        IdentityVerificationDataHolder.getInstance().setIdVProviderManager(idVProviderManager);
     }
 
     protected void unsetIdVProviderManager(IdVProviderManager idVProviderManager) {
 
-        IdentityVerificationDataHolder.setIdVProviderManager(null);
+        IdentityVerificationDataHolder.getInstance().setIdVProviderManager(null);
     }
 }
