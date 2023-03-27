@@ -29,8 +29,13 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationMgt;
 import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerificationManagement;
 import org.wso2.carbon.extension.identity.verification.mgt.IdentityVerifierFactory;
+import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAO;
 import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManager;
+import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAO;
+import org.wso2.carbon.extension.identity.verification.provider.internal.IdVProviderDataHolder;
 import org.wso2.carbon.user.core.service.RealmService;
+
+import java.util.Comparator;
 
 /**
  * OSGi declarative services component which handles registration and un-registration of
@@ -77,12 +82,12 @@ public class IdentityVerificationServiceComponent {
     )
     protected void setIdentityVerifierFactory(IdentityVerifierFactory identityVerifierFactory) {
 
-        IdentityVerificationDataHolder.setIdentityVerifierFactory(identityVerifierFactory);
+        IdentityVerificationDataHolder.getInstance().setIdentityVerifierFactory(identityVerifierFactory);
     }
 
     protected void unsetIdentityVerifierFactory(IdentityVerifierFactory identityVerifierFactory) {
 
-        IdentityVerificationDataHolder.unbindIdentityVerifierFactory(identityVerifierFactory);
+        IdentityVerificationDataHolder.getInstance().unbindIdentityVerifierFactory(identityVerifierFactory);
     }
 
     @Reference(
@@ -93,12 +98,12 @@ public class IdentityVerificationServiceComponent {
             unbind = "unsetRealmService")
     protected void setRealmService(RealmService realmService) {
 
-        IdentityVerificationDataHolder.setRealmService(realmService);
+        IdentityVerificationDataHolder.getInstance().setRealmService(realmService);
     }
 
     protected void unsetRealmService(RealmService realmService) {
 
-        IdentityVerificationDataHolder.setRealmService(null);
+        IdentityVerificationDataHolder.getInstance().setRealmService(null);
     }
 
     @Reference(
@@ -109,11 +114,39 @@ public class IdentityVerificationServiceComponent {
             unbind = "unsetIdVProviderManager")
     protected void setIdVProviderManager(IdVProviderManager idVProviderManager) {
 
-        IdentityVerificationDataHolder.setIdVProviderManager(idVProviderManager);
+        IdentityVerificationDataHolder.getInstance().setIdVProviderManager(idVProviderManager);
     }
 
     protected void unsetIdVProviderManager(IdVProviderManager idVProviderManager) {
 
-        IdentityVerificationDataHolder.setIdVProviderManager(null);
+        IdentityVerificationDataHolder.getInstance().setIdVProviderManager(null);
+    }
+
+    @Reference(
+            name = "idvclaim.dao",
+            service = org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificationClaimDAO.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetIdVClaimDAO"
+    )
+    protected void setIdVClaimDAO(IdentityVerificationClaimDAO identityVerificationClaimDAO) {
+
+        if (identityVerificationClaimDAO != null) {
+            if (log.isDebugEnabled()) {
+                log.debug("idVProviderDAO is registered in IdVProviderMgtService service.");
+            }
+
+            IdentityVerificationDataHolder.getInstance().getIdVClaimDAOs().add(identityVerificationClaimDAO);
+            IdentityVerificationDataHolder.getInstance().getIdVClaimDAOs().
+                    sort(Comparator.comparingInt(IdentityVerificationClaimDAO::getPriority));
+        }
+    }
+
+    protected void unsetIdVClaimDAO(IdentityVerificationClaimDAO identityVerificationClaimDAO) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("IdVProviderDAO is unregistered in IdentityVerificationService service.");
+        }
+        IdentityVerificationDataHolder.getInstance().getIdVClaimDAOs().remove(identityVerificationClaimDAO);
     }
 }

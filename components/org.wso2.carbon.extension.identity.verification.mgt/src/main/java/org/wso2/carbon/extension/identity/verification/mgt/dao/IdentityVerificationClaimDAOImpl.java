@@ -59,6 +59,12 @@ import static org.wso2.carbon.extension.identity.verification.mgt.utils.Identity
 public class IdentityVerificationClaimDAOImpl implements IdentityVerificationClaimDAO {
 
     @Override
+    public int getPriority() {
+
+        return 2;
+    }
+
+    @Override
     public void addIdVClaimList(List<IdVClaim> idvClaimList, int tenantId) throws IdentityVerificationException {
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false)) {

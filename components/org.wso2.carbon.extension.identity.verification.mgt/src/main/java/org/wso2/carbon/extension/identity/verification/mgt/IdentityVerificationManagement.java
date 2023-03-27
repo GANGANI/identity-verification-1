@@ -73,7 +73,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
         }
         String identityVerifierName = identityVerifierData.getIdentityVerificationProviderId();
         IdentityVerifierFactory identityVerifierFactory =
-                IdentityVerificationDataHolder.getIdentityVerifierFactory(identityVerifierName);
+                IdentityVerificationDataHolder.getInstance().getIdentityVerifierFactory(identityVerifierName);
         if (identityVerifierFactory == null) {
             // todo
             throw new IdentityVerificationException(identityVerifierName);
@@ -182,7 +182,8 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
     private boolean isValidIdVProviderId(String idvProviderId, int tenantId) throws IdentityVerificationException {
 
         try {
-            if (IdentityVerificationDataHolder.getIdVProviderManager().isIdVProviderExists(idvProviderId, tenantId)) {
+            if (IdentityVerificationDataHolder.getInstance().
+                    getIdVProviderManager().isIdVProviderExists(idvProviderId, tenantId)) {
                 return true;
             }
         } catch (IdVProviderMgtException e) {
@@ -197,7 +198,7 @@ public class IdentityVerificationManagement implements IdentityVerificationMgt {
         UniqueIDUserStoreManager uniqueIDUserStoreManager;
         try {
             uniqueIDUserStoreManager =
-                    getUniqueIdEnabledUserStoreManager(IdentityVerificationDataHolder.getRealmService(),
+                    getUniqueIdEnabledUserStoreManager(IdentityVerificationDataHolder.getInstance().getRealmService(),
                             IdentityTenantUtil.getTenantDomain(tenantId));
             User user = uniqueIDUserStoreManager.getUserWithID(userId, null, null);
             if (user != null) {
