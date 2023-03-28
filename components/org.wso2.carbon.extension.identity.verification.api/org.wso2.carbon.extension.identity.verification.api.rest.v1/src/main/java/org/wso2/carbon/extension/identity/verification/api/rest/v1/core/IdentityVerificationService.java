@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
@@ -171,7 +170,7 @@ public class IdentityVerificationService {
         int tenantId = getTenantId();
         try {
             idVClaim = IdentityVerificationServiceHolder.getIdentityVerificationMgt().
-                    getIDVClaims(userId, tenantId);
+                    getIdVClaims(userId, tenantId);
         } catch (IdentityVerificationException e) {
             if (IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID.getCode().equals(e.getErrorCode())) {
                 throw IdentityVerificationUtils.handleIdVException(e,

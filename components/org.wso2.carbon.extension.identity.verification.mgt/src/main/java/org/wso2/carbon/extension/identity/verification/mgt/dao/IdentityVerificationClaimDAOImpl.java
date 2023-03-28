@@ -39,6 +39,7 @@ import static org.wso2.carbon.extension.identity.verification.mgt.utils.Identity
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_RETRIEVING_IDV_CLAIM;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_RETRIEVING_IDV_CLAIMS;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ErrorMessage.ERROR_UPDATING_IDV_CLAIM;
+import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.ID;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.IDVP_ID;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.IS_VERIFIED;
 import static org.wso2.carbon.extension.identity.verification.mgt.utils.IdentityVerificationConstants.METADATA;
@@ -60,7 +61,7 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
     @Override
     public int getPriority() {
 
-        return 2;
+        return 1;
     }
 
     @Override
@@ -91,9 +92,6 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
 
         try (Connection connection = IdentityDatabaseUtil.getDBConnection(false)) {
             try (PreparedStatement updateIdVProviderStmt = connection.prepareStatement(UPDATE_IDV_CLAIM_SQL)) {
-                if (idVClaim.getStatus()) {
-
-                }
                 updateIdVProviderStmt.setString(1, idVClaim.getStatus() ? "1" : "0");
                 updateIdVProviderStmt.setObject(2, getMetadata(idVClaim));
                 updateIdVProviderStmt.setString(3, idVClaim.getUserId());
@@ -123,6 +121,7 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
             try (ResultSet idVProviderResultSet = getIdVProviderStmt.executeQuery()) {
                 while (idVProviderResultSet.next()) {
                     idVClaim = new IdVClaim();
+                    idVClaim.setId(idVProviderResultSet.getString(ID));
                     idVClaim.setUuid(idVProviderResultSet.getString(UUID));
                     idVClaim.setUserId(idVProviderResultSet.getString(USER_ID));
                     idVClaim.setClaimUri(idVProviderResultSet.getString(CLAIM_URI));
@@ -149,6 +148,7 @@ public class IdentityVerificationClaimDAOImpl implements IdentityVerificationCla
             try (ResultSet idVProviderResultSet = getIdVProviderStmt.executeQuery()) {
                 while (idVProviderResultSet.next()) {
                     IdVClaim idVClaim = new IdVClaim();
+                    idVClaim.setId(idVProviderResultSet.getString(ID));
                     idVClaim.setUuid(idVProviderResultSet.getString(UUID));
                     idVClaim.setUserId(idVProviderResultSet.getString(USER_ID));
                     idVClaim.setClaimUri(idVProviderResultSet.getString(CLAIM_URI));

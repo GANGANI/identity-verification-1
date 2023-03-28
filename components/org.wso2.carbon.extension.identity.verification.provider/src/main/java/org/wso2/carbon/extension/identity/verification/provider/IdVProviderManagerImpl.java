@@ -77,7 +77,10 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
     public IdentityVerificationProvider addIdVProvider(IdentityVerificationProvider identityVerificationProvider,
                                                        int tenantId) throws IdVProviderMgtException {
 
-        validateAddIdPVInputValues(identityVerificationProvider.getIdVProviderName(), tenantId);
+        String idVPName = identityVerificationProvider.getIdVProviderName();
+        if (getIdVPByName(idVPName, tenantId) != null) {
+            throw IdVProviderMgtExceptionManagement.handleClientException(ERROR_IDVP_ALREADY_EXISTS, idVPName);
+        }
         this.getIdVProviderDAO().addIdVProvider(identityVerificationProvider, tenantId);
         return identityVerificationProvider;
     }
@@ -91,6 +94,10 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
     @Override
     public void deleteIdVProvider(String idVProviderId, int tenantId) throws IdVProviderMgtException {
 
+        if (StringUtils.isEmpty(idVProviderId)) {
+            throw IdVProviderMgtExceptionManagement.handleClientException(IdVProviderMgtConstants.ErrorMessage.
+                    ERROR_EMPTY_IDVP_ID);
+        }
         getIdVProviderDAO().deleteIdVProvider(idVProviderId, tenantId);
     }
 
@@ -113,6 +120,10 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
     @Override
     public boolean isIdVProviderExists(String idvProviderId, int tenantId) throws IdVProviderMgtException {
 
+        if (StringUtils.isEmpty(idvProviderId)) {
+            throw IdVProviderMgtExceptionManagement.handleClientException(IdVProviderMgtConstants.ErrorMessage.
+                    ERROR_EMPTY_IDVP_ID);
+        }
         return getIdVProviderDAO().isIdVProviderExists(idvProviderId, tenantId);
     }
 
@@ -125,21 +136,6 @@ public class IdVProviderManagerImpl implements IdVProviderManager {
         }
 
         return getIdVProviderDAO().getIdVPByName(idVPName, tenantId);
-    }
-
-
-    /**
-     * Validate input parameters for the addIdVProvider function.
-     *
-     * @param idVPName Identity Verification Provider name.
-     * @param tenantId Tenant Id.
-     * @throws IdVProviderMgtException IdVProviderMgtException
-     */
-    private void validateAddIdPVInputValues(String idVPName, int tenantId) throws IdVProviderMgtException {
-
-        if (getIdVPByName(idVPName, tenantId) != null) {
-            throw IdVProviderMgtExceptionManagement.handleClientException(ERROR_IDVP_ALREADY_EXISTS, idVPName);
-        }
     }
 
     /**

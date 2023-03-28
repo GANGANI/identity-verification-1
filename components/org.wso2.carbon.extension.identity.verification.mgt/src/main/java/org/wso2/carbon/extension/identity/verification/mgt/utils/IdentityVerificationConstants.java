@@ -24,6 +24,7 @@ package org.wso2.carbon.extension.identity.verification.mgt.utils;
 public class IdentityVerificationConstants {
 
     private static final String IDV_ERROR_PREFIX = "IDV-";
+    public static final String ID = "ID";
     public static final String UUID = "UUID";
     public static final String USER_ID = "USER_ID";
     public static final String CLAIM_URI = "CLAIM_URI";
@@ -45,11 +46,11 @@ public class IdentityVerificationConstants {
                         "VALUES (?,?,?,?,?,?,?)";
 
         public static final String GET_IDV_CLAIM_SQL =
-                "SELECT UUID, USER_ID, CLAIM_URI, TENANT_ID, IDVP_ID, IS_VERIFIED, METADATA FROM IDV_CLAIM WHERE " +
+                "SELECT ID, UUID, USER_ID, CLAIM_URI, TENANT_ID, IDVP_ID, IS_VERIFIED, METADATA FROM IDV_CLAIM WHERE " +
                         "USER_ID = ? AND UUID = ? AND TENANT_ID = ?";
 
         public static final String GET_IDV_CLAIMS_SQL =
-                "SELECT UUID, USER_ID, CLAIM_URI, IS_VERIFIED, METADATA FROM IDV_CLAIM WHERE " +
+                "SELECT ID, UUID, USER_ID, CLAIM_URI, IS_VERIFIED, METADATA FROM IDV_CLAIM WHERE " +
                         "USER_ID = ? AND TENANT_ID = ?";
 
         public static final String UPDATE_IDV_CLAIM_SQL =

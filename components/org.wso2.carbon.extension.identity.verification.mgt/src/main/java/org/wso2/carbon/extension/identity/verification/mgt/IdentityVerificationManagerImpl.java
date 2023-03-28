@@ -34,7 +34,6 @@ import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.UniqueIDUserStoreManager;
-import org.wso2.carbon.user.core.common.User;
 import org.wso2.carbon.user.core.service.RealmService;
 
 import java.util.List;
@@ -114,7 +113,7 @@ public class IdentityVerificationManagerImpl implements IdentityVerificationMana
         }
         for (IdVClaim idVClaim : idVClaims) {
             idVClaim.setUuid(UUID.randomUUID().toString());
-            validateAddIDVClaimInputs(userId, idVClaim, tenantId);
+            validateIdVClaimInputs(userId, idVClaim, tenantId);
         }
         getIdVClaimDAO().addIdVClaimList(idVClaims, tenantId);
         return idVClaims;
@@ -152,7 +151,7 @@ public class IdentityVerificationManagerImpl implements IdentityVerificationMana
     }
 
     @Override
-    public IdVClaim[] getIDVClaims(String userId, int tenantId) throws IdentityVerificationException {
+    public IdVClaim[] getIdVClaims(String userId, int tenantId) throws IdentityVerificationException {
 
         if (StringUtils.isBlank(userId) || !isValidUserId(userId, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
@@ -161,14 +160,7 @@ public class IdentityVerificationManagerImpl implements IdentityVerificationMana
         return getIdVClaimDAO().getIDVClaims(userId, tenantId);
     }
 
-    @Override
-    public boolean isIdVClaimDataExists(String userId, String idvId, String uri, int tenantId)
-            throws IdentityVerificationException {
-
-        return getIdVClaimDAO().isIdVClaimDataExist(userId, idvId, uri, tenantId);
-    }
-
-    private void validateAddIDVClaimInputs(String userId, IdVClaim idVClaim, int tenantId)
+    private void validateIdVClaimInputs(String userId, IdVClaim idVClaim, int tenantId)
             throws IdentityVerificationException {
 
         String idvProviderId = idVClaim.getIdVPId();
@@ -182,7 +174,7 @@ public class IdentityVerificationManagerImpl implements IdentityVerificationMana
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_CLAIM_URI);
         }
-        if (isIdVClaimDataExists(userId, idvProviderId, claimUri, tenantId)) {
+        if (getIdVClaimDAO().isIdVClaimDataExist(userId, idvProviderId, claimUri, tenantId)) {
             throw IdentityVerificationExceptionMgt.handleClientException(
                     IdentityVerificationConstants.ErrorMessage.ERROR_IDV_CLAIM_DATA_ALREADY_EXISTS);
         };
@@ -209,8 +201,7 @@ public class IdentityVerificationManagerImpl implements IdentityVerificationMana
             uniqueIDUserStoreManager =
                     getUniqueIdEnabledUserStoreManager(IdentityVerificationDataHolder.getInstance().getRealmService(),
                             IdentityTenantUtil.getTenantDomain(tenantId));
-            User user = uniqueIDUserStoreManager.getUserWithID(userId, null, null);
-            if (user != null) {
+            if (uniqueIDUserStoreManager.isExistingUserWithID(userId)) {
                 return true;
             }
         } catch (UserStoreException e) {
@@ -226,8 +217,7 @@ public class IdentityVerificationManagerImpl implements IdentityVerificationMana
         return false;
     }
 
-    @Override
-    public boolean isIdVClaimExists(String idVClaimId, int tenantId) throws IdentityVerificationException {
+    private boolean isIdVClaimExists(String idVClaimId, int tenantId) throws IdentityVerificationException {
 
         return getIdVClaimDAO().isIdVClaimExist(idVClaimId, tenantId);
     }

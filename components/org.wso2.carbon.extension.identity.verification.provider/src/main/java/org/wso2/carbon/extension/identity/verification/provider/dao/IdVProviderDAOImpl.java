@@ -335,7 +335,7 @@ public class IdVProviderDAOImpl implements IdVProviderDAO {
                 addIDVProviderConfigsStmt.setInt(2, tenantId);
                 addIDVProviderConfigsStmt.setString(3, idVConfigProperty.getName());
                 addIDVProviderConfigsStmt.setString(4, idVConfigProperty.getValue());
-                addIDVProviderConfigsStmt.setBoolean(5, idVConfigProperty.isConfidential());
+                addIDVProviderConfigsStmt.setString(5, idVConfigProperty.isConfidential() ? "1" : "0");
                 addIDVProviderConfigsStmt.executeUpdate();
             }
         } catch (SQLException e) {

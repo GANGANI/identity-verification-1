@@ -60,7 +60,7 @@ public interface IdentityVerificationManager {
      * @return IdVClaims.
      * @throws IdentityVerificationException IdentityVerificationException.
      */
-    IdVClaim[] getIDVClaims(String userId, int tenantId) throws IdentityVerificationException;
+    IdVClaim[] getIdVClaims(String userId, int tenantId) throws IdentityVerificationException;
 
     /**
      * Add the IdVClaim.
@@ -91,9 +91,4 @@ public interface IdentityVerificationManager {
      * @throws IdentityVerificationException IdentityVerificationException.
      */
     void deleteIDVClaim(String userId, String idvClaimId, int tenantId) throws IdentityVerificationException;
-
-    boolean isIdVClaimDataExists(String userId, String idvId, String uri, int tenantId)
-            throws IdentityVerificationException;
-
-    boolean isIdVClaimExists(String idVClaimId, int tenantId) throws IdentityVerificationException;
 }
