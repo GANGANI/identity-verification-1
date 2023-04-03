@@ -24,10 +24,12 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.testng.PowerMockTestCase;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.wso2.carbon.base.CarbonBaseConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAO;
+import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtClientException;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtException;
 import org.wso2.carbon.extension.identity.verification.provider.internal.IdVProviderDataHolder;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdVConfigProperty;
@@ -35,6 +37,7 @@ import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVe
 import org.wso2.carbon.identity.core.util.IdentityDatabaseUtil;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.secret.mgt.core.exception.SecretManagementClientException;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -86,6 +89,16 @@ public class IdVProviderManagerImplTest extends PowerMockTestCase {
                 idVProviderManager.getIdVProvider("1c7ce08b-2ebc-4b9e-a107-3b129c019954", 1);
         Assert.assertEquals(identityVerificationProvider.getIdVProviderUuid(),
                 "1c7ce08b-2ebc-4b9e-a107-3b129c019954");
+    }
+
+    @Test(expectedExceptions = IdVProviderMgtClientException.class)
+    public void testGetIdVProviderEmptyIdVProviderID() {
+
+        try {
+            idVProviderManager.getIdVProvider(null, 1);
+        } catch (IdVProviderMgtException e) {
+            Assert.assertEquals(e.getErrorCode(), "IdVProvider ID cannot be empty.");
+        }
     }
 
     @Test

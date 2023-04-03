@@ -93,8 +93,8 @@
                     <excludes>
                         <!--Exception classes and IdentityConstants in this component are used not used within this-->
                         <!--component, but in dependent identity components, hence excluding in coverage reports-->
+                        <exclude>**/util/*</exclude>
                         <exclude>**/*Exception.class</exclude>
-                        <exclude>**/IdentityConstants*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
