@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023, WSO2 LLC. (http://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.carbon.extension.identity.verification.mgt;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -6,7 +24,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
-import static org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_ID;
 
 import org.json.JSONObject;
 import org.mockito.Mock;
@@ -22,6 +39,8 @@ import org.wso2.carbon.extension.identity.verification.mgt.dao.IdentityVerificat
 import org.wso2.carbon.extension.identity.verification.mgt.internal.IdentityVerificationDataHolder;
 import org.wso2.carbon.extension.identity.verification.mgt.model.IdVClaim;
 
+import org.wso2.carbon.extension.identity.verification.mgt.model.IdVProperty;
+import org.wso2.carbon.extension.identity.verification.mgt.model.IdentityVerifierData;
 import org.wso2.carbon.extension.identity.verification.provider.IdVProviderManager;
 import org.wso2.carbon.identity.core.util.IdentityDatabaseUtil;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
@@ -55,6 +74,15 @@ public class IdentityVerificationManagerImplTest extends PowerMockTestCase {
     IdVProviderManager mockIdVProviderManager;
     @Mock
     AbstractUserStoreManager mockAbstractUserStoreManager;
+    @Mock
+    IdentityVerifierFactory identityVerifierFactory;
+    @Mock
+    IdentityVerifier identityVerifier;
+
+    private final String idvClaimUUID = "d245799b-28bc-4fdb-abb4-e265038320by";
+    private final String userId = "715558cb-d9c1-4a23-af09-3d95284d8e2b";
+    private final String idvProviderId = "1c7ce08b-2ebc-4b9e-a107-3b129c019954";
+    private final int tenantId = -1234;
 
     @BeforeMethod
     public void setUp() throws Exception {
@@ -63,29 +91,35 @@ public class IdentityVerificationManagerImplTest extends PowerMockTestCase {
         System.setProperty(CarbonBaseConstants.CARBON_HOME, carbonHome);
         System.setProperty(CarbonBaseConstants.CARBON_CONFIG_DIR_PATH, Paths.get(carbonHome, "conf").toString());
         prepareConfigs();
+        mockIsExistingUserCheck();
+        mockIdentityVerificationClaimDAO();
+        identityVerification = new IdentityVerificationManagerImpl();
     }
 
-//    @DataProvider(name = "validParameters")
-//    public Object[][] createValidParameters() {
-//        return new Object[][] { { "user1", "claim1", 1 } };
-//    }
-//
-//    @DataProvider(name = "invalidParameters")
-//    public Object[][] createInvalidParameters() {
-//        return new Object[][] {
-//                { "", "claim1", 1, IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID },
-//                { "user1", "", 1, IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_IDV_CLAIM_ID },
-//                { "user1", "claim1", 1, null },
-//                { "user1", "claim1", 2, IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_IDV_CLAIM_ID }
-//        };
-//    }
+    @Test
+    public void testVerifyIdentity() throws Exception {
+
+        IdentityVerifierData identityVerifierData = new IdentityVerifierData();
+        identityVerifierData.setIdentityVerificationProviderId(idvProviderId);
+        IdVProperty idVProperty = new IdVProperty();
+        idVProperty.setName("token");
+        idVProperty.setValue("123456");
+        identityVerifierData.addIdVProperty(idVProperty);
+
+        PowerMockito.mockStatic(IdentityVerificationDataHolder.class);
+        when(IdentityVerificationDataHolder.getInstance()).thenReturn(identityVerificationDataHolder);
+        when(identityVerificationDataHolder.
+                getIdentityVerifierFactory(anyString())).thenReturn(identityVerifierFactory);
+        when(identityVerifierFactory.getIdentityVerifier(anyString())).thenReturn(identityVerifier);
+        when(identityVerifier.verifyIdentity(any(IdentityVerifierData.class), anyInt())).
+                thenReturn(identityVerifierData);
+
+        identityVerification.verifyIdentity(userId, identityVerifierData, tenantId);
+    }
 
     @Test
     public void testGetIdVClaim() throws Exception {
 
-        mockIdentityVerificationClaimDAO();
-        identityVerification = new IdentityVerificationManagerImpl();
-        mockIsExistingUserCheck();
         when(identityVerificationClaimDAO.isIdVClaimExist(anyString(), anyInt())).thenReturn(true);
         when(identityVerificationClaimDAO.getIDVClaim(anyString(), anyString(), anyInt())).
                 thenReturn(getIdVClaim());
@@ -94,19 +128,14 @@ public class IdentityVerificationManagerImplTest extends PowerMockTestCase {
         when(identityVerificationDataHolder.getIdVProviderManager()).thenReturn(mockIdVProviderManager);
         when(mockIdVProviderManager.isIdVProviderExists(anyString(), anyInt())).thenReturn(true);
 
-        identityVerification = new IdentityVerificationManagerImpl();
         IdVClaim idVClaim =
-                identityVerification.getIdVClaim("715558cb-d9c1-4a23-af09-3d95284d8e2b",
-                        "575a3d28-c6fb-46c8-bf63-45530448ca17", -1234);
+                identityVerification.getIdVClaim(userId, idvClaimUUID, tenantId);
         Assert.assertEquals(idVClaim.getClaimUri(), "http://wso2.org/claims/dob");
     }
 
     @Test
     public void testAddIdVClaims() throws Exception {
 
-        mockIdentityVerificationClaimDAO();
-        identityVerification = new IdentityVerificationManagerImpl();
-        mockIsExistingUserCheck();
         when(identityVerificationClaimDAO.isIdVClaimDataExist(anyString(), anyString(), anyString(), anyInt())).
                 thenReturn(false);
         PowerMockito.doNothing().when(identityVerificationClaimDAO).addIdVClaimList(anyList(), anyInt());
@@ -118,27 +147,44 @@ public class IdentityVerificationManagerImplTest extends PowerMockTestCase {
         idVClaims.add(getIdVClaim());
 
         List<IdVClaim> addedIdVClaims =
-                identityVerification.addIdVClaims("715558cb-d9c1-4a23-af09-3d95284d8e2b",
-                        idVClaims, -1234);
+                identityVerification.addIdVClaims(userId, idVClaims, tenantId);
         Assert.assertEquals(addedIdVClaims.get(0).getClaimUri(), "http://wso2.org/claims/dob");
     }
 
     @Test
     public void testUpdateIdVClaims() throws Exception {
 
-        mockIdentityVerificationClaimDAO();
-        identityVerification = new IdentityVerificationManagerImpl();
-        mockIsExistingUserCheck();
         when(identityVerificationClaimDAO.isIdVClaimExist(anyString(), anyInt())).
                 thenReturn(true);
         PowerMockito.doNothing().when(identityVerificationClaimDAO).updateIdVClaim(any(IdVClaim.class), anyInt());
 
         IdVClaim idVClaim = getIdVClaim();
 
-        IdVClaim updatedIdVClaim =
-                identityVerification.updateIdVClaim("715558cb-d9c1-4a23-af09-3d95284d8e2b",
-                        idVClaim, -1234);
+        IdVClaim updatedIdVClaim = identityVerification.updateIdVClaim(userId, idVClaim, tenantId);
         Assert.assertEquals(updatedIdVClaim.getClaimUri(), "http://wso2.org/claims/dob");
+    }
+
+    @Test
+    public void testDeleteIDVClaim() throws Exception {
+
+        PowerMockito.doNothing().when(identityVerificationClaimDAO).deleteIdVClaim(anyString(), anyString(), anyInt());
+
+        identityVerification.deleteIDVClaim(userId, idvClaimUUID, tenantId);
+    }
+
+    @Test
+    public void testGetIDVClaims() throws Exception {
+
+        when(identityVerificationClaimDAO.isIdVClaimExist(anyString(), anyInt())).thenReturn(true);
+        when(identityVerificationClaimDAO.getIDVClaims(anyString(), anyInt())).
+                thenReturn(getIdVClaims());
+
+        when(identityVerificationDataHolder.getIdVProviderManager()).thenReturn(mockIdVProviderManager);
+        when(mockIdVProviderManager.isIdVProviderExists(anyString(), anyInt())).thenReturn(true);
+
+        IdVClaim[] idVClaims =
+                identityVerification.getIdVClaims(userId, tenantId);
+        Assert.assertEquals(idVClaims.length, 1);
     }
 
     private void mockIdentityVerificationClaimDAO() {
@@ -157,92 +203,28 @@ public class IdentityVerificationManagerImplTest extends PowerMockTestCase {
         when(mockAbstractUserStoreManager.isExistingUserWithID(anyString())).thenReturn(true);
     }
 
-    @Test
-    public void testDeleteIDVClaim() throws Exception {
-
-        mockIdentityVerificationClaimDAO();
-        identityVerification = new IdentityVerificationManagerImpl();
-        mockIsExistingUserCheck();
-
-        PowerMockito.doNothing().when(identityVerificationClaimDAO).deleteIdVClaim(anyString(), anyString(), anyInt());
-
-        identityVerification.deleteIDVClaim("715558cb-d9c1-4a23-af09-3d95284d8e2b",
-                "575a3d28-c6fb-46c8-bf63-45530448ca17", -1234);
-    }
-
-    @Test
-    public void testGetIDVClaims() throws Exception {
-
-        mockIdentityVerificationClaimDAO();
-        identityVerification = new IdentityVerificationManagerImpl();
-        mockIsExistingUserCheck();
-        when(identityVerificationClaimDAO.isIdVClaimExist(anyString(), anyInt())).thenReturn(true);
-        when(identityVerificationClaimDAO.getIDVClaims(anyString(), anyInt())).
-                thenReturn(getIdVClaims());
-
-        when(identityVerificationDataHolder.getIdVProviderManager()).thenReturn(mockIdVProviderManager);
-        when(mockIdVProviderManager.isIdVProviderExists(anyString(), anyInt())).thenReturn(true);
-
-        identityVerification = new IdentityVerificationManagerImpl();
-        IdVClaim[] idVClaims =
-                identityVerification.getIdVClaims("715558cb-d9c1-4a23-af09-3d95284d8e2b", -1234);
-        Assert.assertEquals(idVClaims.length, 1);
-    }
-
-//    }
-//
-//    @Test
-//    public void testIsIdVClaimExists() throws IdentityVerificationException {
-//
-////        mockStatic(IdentityDatabaseUtil.class);
-////        when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
-////        when(IdentityDatabaseUtil.getDBConnection(false)).thenReturn(connection);
-////        when(identityVerificationClaimDAO.isIdVClaimExist("idVClaimId", -1234)).thenReturn(true);
-////        Assert.assertTrue(identityVerificationClaimDAO.isIdVClaimExist("idVClaimId", -1234));
-//    }
-//
-//    public Object[][] getIdVClaimTestData() {
-//        String sampleUserId = "sampleUserId";
-//        String sampleIdvClaimId = "sampleIdvClaimId";
-//        int sampleTenantId = 123;
-//        IdVClaim expectedClaim = mock(IdVClaim.class);
-//
-//        return new Object[][] {
-//                // Valid input case
-//                { sampleUserId, sampleIdvClaimId, sampleTenantId, true, true, expectedClaim, expectedClaim },
-//
-//                // Invalid IdVClaimId case
-//                { sampleUserId, "", sampleTenantId, false, true, null,
-//                        IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_IDV_CLAIM_ID },
-//
-//                // Invalid userId case
-//                { "", sampleIdvClaimId, sampleTenantId, true, false, null,
-//                        IdentityVerificationConstants.ErrorMessage.ERROR_INVALID_USER_ID }
-//        };
-//    }
-
     private void prepareConfigs() {
 
-        mockCarbonContextForTenant(SUPER_TENANT_ID, SUPER_TENANT_DOMAIN_NAME);
+        mockCarbonContextForTenant();
         mockIdentityTenantUtility();
     }
 
-
-    private void mockCarbonContextForTenant(int tenantId, String tenantDomain) {
+    private void mockCarbonContextForTenant() {
 
         PowerMockito.mockStatic(PrivilegedCarbonContext.class);
         PrivilegedCarbonContext privilegedCarbonContext = PowerMockito.mock(PrivilegedCarbonContext.class);
         PowerMockito.when(PrivilegedCarbonContext.getThreadLocalCarbonContext()).thenReturn(privilegedCarbonContext);
-        PowerMockito.when(privilegedCarbonContext.getTenantDomain()).thenReturn(tenantDomain);
-        PowerMockito.when(privilegedCarbonContext.getTenantId()).thenReturn(tenantId);
+        PowerMockito.when(privilegedCarbonContext.getTenantDomain()).thenReturn(
+                org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
+        PowerMockito.when(privilegedCarbonContext.getTenantId()).thenReturn(
+                org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_ID);
         PowerMockito.when(privilegedCarbonContext.getUsername()).thenReturn("admin");
     }
 
     private void mockIdentityTenantUtility() {
 
         PowerMockito.mockStatic(IdentityTenantUtil.class);
-        IdentityTenantUtil identityTenantUtil = PowerMockito.mock(IdentityTenantUtil.class);
-        PowerMockito.when(identityTenantUtil.getTenantDomain(any(Integer.class))).thenReturn(SUPER_TENANT_DOMAIN_NAME);
+        PowerMockito.when(IdentityTenantUtil.getTenantDomain(any(Integer.class))).thenReturn(SUPER_TENANT_DOMAIN_NAME);
     }
 
     private IdVClaim[] getIdVClaims() {
@@ -252,14 +234,14 @@ public class IdentityVerificationManagerImplTest extends PowerMockTestCase {
         return idVClaims;
     }
 
-    private static IdVClaim getIdVClaim() {
+    private IdVClaim getIdVClaim() {
 
         IdVClaim idVClaim = new IdVClaim();
-        idVClaim.setUuid("d245799b-28bc-4fdb-abb4-e265038320by");
-        idVClaim.setUserId("715558cb-d9c1-4a23-af09-3d95284d8e2b");
+        idVClaim.setUuid(idvClaimUUID);
+        idVClaim.setUserId(userId);
         idVClaim.setClaimUri("http://wso2.org/claims/dob");
         idVClaim.setStatus(true);
-        idVClaim.setIdVPId("1c7ce08b-2ebc-4b9e-a107-3b129c019954");
+        idVClaim.setIdVPId(idvProviderId);
         idVClaim.setMetadata(new JSONObject("{\n" +
                 "      \"source\": \"evidentID\",\n" +
                 "      \"trackingId\": \"123e4567-e89b-12d3-a456-556642440000\"\n" +

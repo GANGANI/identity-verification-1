@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023, WSO2 LLC. (http://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.carbon.extension.identity.verification.mgt.dao;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -42,6 +60,10 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
     private IdentityVerificationClaimDAO identityVerificationClaimDAO;
     private static Map<String, BasicDataSource> dataSourceMap = new HashMap<>();
     private static final String DB_NAME = "test";
+    private final String idvClaimUUID = "d245799b-28bc-4fdb-abb4-e265038320by";
+    private final String userId = "715558cb-d9c1-4a23-af09-3d95284d8e2b";
+    private final String idvProviderId = "1c7ce08b-2ebc-4b9e-a107-3b129c019954";
+    private final int tenantId = -1234;
 
     @BeforeMethod
     public void setUp() throws Exception {
@@ -49,7 +71,7 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
         identityVerificationClaimDAO = new IdentityVerificationClaimDAOImpl();
         IdentityVerificationDataHolder.getInstance().
                 setIdVClaimDAOs(Collections.singletonList(identityVerificationClaimDAO));
-        initiateH2Database(DB_NAME, getFilePath("h2.sql"));
+        initiateH2Database(getFilePath("h2.sql"));
         String carbonHome = Paths.get(System.getProperty("user.dir"), "target", "test-classes").toString();
         System.setProperty(CarbonBaseConstants.CARBON_HOME, carbonHome);
         System.setProperty(CarbonBaseConstants.CARBON_CONFIG_DIR_PATH, Paths.get(carbonHome, "conf").toString());
@@ -70,7 +92,7 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
             List<IdVClaim> idVClaimList = getTestIdVClaims();
-            identityVerificationClaimDAO.addIdVClaimList(idVClaimList, -1234);
+            identityVerificationClaimDAO.addIdVClaimList(idVClaimList, tenantId);
             for (IdVClaim claim : idVClaimList) {
                 // todo
                 assertNotNull(claim);
@@ -86,7 +108,7 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
             IdVClaim updatedClaim = getIdVClaim2();
-            identityVerificationClaimDAO.updateIdVClaim(updatedClaim, -1234);
+            identityVerificationClaimDAO.updateIdVClaim(updatedClaim, tenantId);
             Assert.assertFalse(updatedClaim.getStatus());
         }
     }
@@ -107,8 +129,7 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
 
             IdVClaim identityVerificationClaim = identityVerificationClaimDAO.
-                    getIDVClaim("715558cb-d9c1-4a23-af09-3d95284d8e2b",
-                            "575a3d28-c6fb-46c8-bf63-45530448ca17", -1234);
+                    getIDVClaim(userId, idvClaimUUID, tenantId);
             Assert.assertEquals(identityVerificationClaim.getClaimUri(), idVClaimList.get(0).getClaimUri());
         }
     }
@@ -121,7 +142,7 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
         try (Connection connection = getConnection(DB_NAME)) {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
-            identityVerificationClaimDAO.addIdVClaimList(idVClaimList, -1234);
+            identityVerificationClaimDAO.addIdVClaimList(idVClaimList, tenantId);
         }
 
         try (Connection connection = getConnection(DB_NAME)) {
@@ -129,7 +150,7 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
 
             IdVClaim[] retrievedIdVClaimList = identityVerificationClaimDAO.
-                    getIDVClaims("715558cb-d9c1-4a23-af09-3d95284d8e2b", -1234);
+                    getIDVClaims(userId, tenantId);
             Assert.assertEquals(retrievedIdVClaimList.length, idVClaimList.size());
         }
     }
@@ -149,9 +170,7 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
 
-            identityVerificationClaimDAO.deleteIdVClaim("715558cb-d9c1-4a23-af09-3d95284d8e2b",
-                    "575a3d28-c6fb-46c8-bf63-45530448ca17", -1234);
-            // todo
+            identityVerificationClaimDAO.deleteIdVClaim(userId, idvClaimUUID, tenantId);
         }
     }
 
@@ -171,8 +190,8 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
 
             boolean isIdVClaimDataExist =
-                    identityVerificationClaimDAO.isIdVClaimDataExist("715558cb-d9c1-4a23-af09-3d95284d8e2b",
-                    "1c7ce08b-2ebc-4b9e-a107-3b129c019954", "http://wso2.org/claims/dob", -1234);
+                    identityVerificationClaimDAO.isIdVClaimDataExist(userId, idvProviderId,
+                            "http://wso2.org/claims/dob", tenantId);
             Assert.assertTrue(isIdVClaimDataExist);
         }
     }
@@ -193,7 +212,7 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
 
             boolean isIdVClaimDataExist = identityVerificationClaimDAO.
-                            isIdVClaimExist("575a3d28-c6fb-46c8-bf63-45530448ca17", -1234);
+                            isIdVClaimExist(idvClaimUUID, tenantId);
             Assert.assertTrue(isIdVClaimDataExist);
         }
     }
@@ -291,16 +310,16 @@ public class IdentityVerificationClaimDAOImplTest extends PowerMockTestCase {
         throw new RuntimeException("No datasource initiated for database: " + database);
     }
 
-    private void initiateH2Database(String databaseName, String scriptPath) throws Exception {
+    private void initiateH2Database(String scriptPath) throws Exception {
 
         BasicDataSource dataSource = new BasicDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
         dataSource.setUsername("username");
         dataSource.setPassword("password");
-        dataSource.setUrl("jdbc:h2:mem:test" + databaseName);
+        dataSource.setUrl("jdbc:h2:mem:test" + IdentityVerificationClaimDAOImplTest.DB_NAME);
         try (Connection connection = dataSource.getConnection()) {
             connection.createStatement().executeUpdate("RUNSCRIPT FROM '" + scriptPath + "'");
         }
-        dataSourceMap.put(databaseName, dataSource);
+        dataSourceMap.put(IdentityVerificationClaimDAOImplTest.DB_NAME, dataSource);
     }
 }

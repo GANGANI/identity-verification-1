@@ -1,21 +1,35 @@
+/*
+ * Copyright (c) 2023, WSO2 LLC. (http://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.wso2.carbon.extension.identity.verification.provider.dao;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.carbon.base.CarbonBaseConstants;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.extension.identity.verification.provider.IdVPSecretProcessor;
 import org.wso2.carbon.extension.identity.verification.provider.internal.IdVProviderDataHolder;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdVConfigProperty;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVerificationProvider;
 import org.wso2.carbon.identity.core.util.IdentityDatabaseUtil;
-import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.secret.mgt.core.SecretManagerImpl;
 import org.wso2.carbon.identity.secret.mgt.core.SecretResolveManagerImpl;
 import org.wso2.carbon.identity.secret.mgt.core.model.ResolvedSecret;
@@ -33,45 +47,53 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
-import static org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
-import static org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_ID;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.addTestIdVProvider;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.idVProviderId;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.idVProviderName;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.tenantId;
 
-@PrepareForTest({PrivilegedCarbonContext.class, IdentityDatabaseUtil.class, IdentityUtil.class,
-        IdentityTenantUtil.class, IdVPSecretProcessor.class})
+/**
+ * Test class for IdVProviderDAOImpl.
+ */
+@PrepareForTest({IdentityDatabaseUtil.class, IdVPSecretProcessor.class})
 public class IdVProviderDAOImplTest {
 
     private IdVProviderDAO idVProviderDAO;
-    private static Map<String, BasicDataSource> dataSourceMap = new HashMap<>();
+    private SecretManagerImpl secretManager;
+    private static final Map<String, BasicDataSource> dataSourceMap = new HashMap<>();
     private static final String DB_NAME = "test";
 
+    @BeforeClass
+    public void init() throws Exception {
+
+        initiateH2Database(DB_NAME, getFilePath());
+    }
+
     @BeforeMethod
-    public void setUp() throws Exception {
+    public void setUp() {
 
         idVProviderDAO = new IdVProviderDAOImpl();
         IdVProviderDataHolder.getInstance().
                 setIdVProviderDAOs(Collections.singletonList(idVProviderDAO));
-//        initiateH2Database(DB_NAME, getFilePath("h2.sql"));
-        String carbonHome = Paths.get(System.getProperty("user.dir"), "target", "test-classes").toString();
-        System.setProperty(CarbonBaseConstants.CARBON_HOME, carbonHome);
-        System.setProperty(CarbonBaseConstants.CARBON_CONFIG_DIR_PATH, Paths.get(carbonHome, "conf").toString());
-        prepareConfigs();
+
+        mockStatic(IdentityDatabaseUtil.class);
+        secretManager = mock(SecretManagerImpl.class);
     }
 
-//    @AfterMethod
-//    public void tearDown() throws Exception {
-//
-//        closeH2Database();
-//    }
+    @AfterClass
+    public void tearDown() throws Exception {
 
+        closeH2Database();
+    }
 
     @Test(priority = 1)
     public void testAddIdVProvider() throws Exception {
 
-        initiateH2Database(DB_NAME, getFilePath("h2.sql"));
-        mockStatic(IdentityDatabaseUtil.class);
         try (Connection connection = getConnection(DB_NAME)) {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
@@ -80,26 +102,23 @@ public class IdVProviderDAOImplTest {
             IdVPSecretProcessor idVPSecretProcessor = mock(IdVPSecretProcessor.class);
             SecretManagerImpl secretManager = mock(SecretManagerImpl.class);
             SecretResolveManagerImpl secretResolveManager = mock(SecretResolveManagerImpl.class);
-            PowerMockito.whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
-            PowerMockito.whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
-            PowerMockito.whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
-            PowerMockito.doReturn(false).when(secretManager).isSecretExist(anyString(), anyString());
+            whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
+            whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
+            whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
+            doReturn(false).when(secretManager).isSecretExist(anyString(), anyString());
             Secret secret = new Secret();
-            PowerMockito.doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
+            doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
             SecretType secretType = new SecretType();
             secretType.setId("1234");
-            PowerMockito.doReturn(secretType).when(secretManager).getSecretType(anyString());
+            doReturn(secretType).when(secretManager).getSecretType(anyString());
             idVProviderDAO.addIdVProvider(identityVerificationProvider, -1234);
-            Assert.assertEquals(identityVerificationProvider.getIdVProviderName(), "ONFIDO");
+            Assert.assertEquals(identityVerificationProvider.getIdVProviderName(), idVProviderName);
         }
     }
 
     @Test(priority = 2)
     public void testGetIdVProvider() throws Exception {
 
-        mockStatic(IdentityDatabaseUtil.class);
-        SecretManagerImpl secretManager = mock(SecretManagerImpl.class);
-
         try (Connection connection = getConnection(DB_NAME)) {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
@@ -107,33 +126,30 @@ public class IdVProviderDAOImplTest {
             IdVPSecretProcessor idVPSecretProcessor = mock(IdVPSecretProcessor.class);
 
             SecretResolveManagerImpl secretResolveManager = mock(SecretResolveManagerImpl.class);
-            PowerMockito.whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
-            PowerMockito.whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
-            PowerMockito.whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
-            PowerMockito.doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
+            whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
+            whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
+            whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
+            doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
             Secret secret = new Secret();
-            PowerMockito.doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
+            doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
             SecretType secretType = new SecretType();
             secretType.setId("1234");
-            PowerMockito.doReturn(secretType).when(secretManager).getSecretType(anyString());
+            doReturn(secretType).when(secretManager).getSecretType(anyString());
 
             ResolvedSecret resolvedSecret = new ResolvedSecret();
             resolvedSecret.setResolvedSecretValue("1234-5678-91234-654246");
-            PowerMockito.doReturn(resolvedSecret).when(secretResolveManager).
+            doReturn(resolvedSecret).when(secretResolveManager).
                     getResolvedSecret(anyString(), anyString());
 
             IdentityVerificationProvider idVProvider =
-                    idVProviderDAO.getIdVProvider("1c7ce08b-2ebc-4b9e-a107-3b129c019954", -1234);
-            Assert.assertEquals(idVProvider.getIdVProviderName(), "ONFIDO");
+                    idVProviderDAO.getIdVProvider(idVProviderId, tenantId);
+            Assert.assertEquals(idVProvider.getIdVProviderName(), idVProviderName);
         }
     }
 
     @Test(priority = 3)
     public void testGetIdVProviders() throws Exception {
 
-        mockStatic(IdentityDatabaseUtil.class);
-        SecretManagerImpl secretManager = mock(SecretManagerImpl.class);
-
         try (Connection connection = getConnection(DB_NAME)) {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
@@ -141,19 +157,19 @@ public class IdVProviderDAOImplTest {
             IdVPSecretProcessor idVPSecretProcessor = mock(IdVPSecretProcessor.class);
 
             SecretResolveManagerImpl secretResolveManager = mock(SecretResolveManagerImpl.class);
-            PowerMockito.whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
-            PowerMockito.whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
-            PowerMockito.whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
-            PowerMockito.doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
+            whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
+            whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
+            whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
+            doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
             Secret secret = new Secret();
-            PowerMockito.doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
+            doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
             SecretType secretType = new SecretType();
             secretType.setId("1234");
-            PowerMockito.doReturn(secretType).when(secretManager).getSecretType(anyString());
+            doReturn(secretType).when(secretManager).getSecretType(anyString());
 
             ResolvedSecret resolvedSecret = new ResolvedSecret();
             resolvedSecret.setResolvedSecretValue("1234-5678-91234-654246");
-            PowerMockito.doReturn(resolvedSecret).when(secretResolveManager).
+            doReturn(resolvedSecret).when(secretResolveManager).
                     getResolvedSecret(anyString(), anyString());
 
             List<IdentityVerificationProvider> identityVerificationProviders =
@@ -165,9 +181,6 @@ public class IdVProviderDAOImplTest {
     @Test(priority = 4)
     public void testGetIdVPByName() throws Exception {
 
-        mockStatic(IdentityDatabaseUtil.class);
-        SecretManagerImpl secretManager = mock(SecretManagerImpl.class);
-
         try (Connection connection = getConnection(DB_NAME)) {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
@@ -175,23 +188,23 @@ public class IdVProviderDAOImplTest {
             IdVPSecretProcessor idVPSecretProcessor = mock(IdVPSecretProcessor.class);
 
             SecretResolveManagerImpl secretResolveManager = mock(SecretResolveManagerImpl.class);
-            PowerMockito.whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
-            PowerMockito.whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
-            PowerMockito.whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
-            PowerMockito.doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
+            whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
+            whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
+            whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
+            doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
             Secret secret = new Secret();
-            PowerMockito.doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
+            doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
             SecretType secretType = new SecretType();
             secretType.setId("1234");
-            PowerMockito.doReturn(secretType).when(secretManager).getSecretType(anyString());
+            doReturn(secretType).when(secretManager).getSecretType(anyString());
 
             ResolvedSecret resolvedSecret = new ResolvedSecret();
             resolvedSecret.setResolvedSecretValue("1234-5678-91234-654246");
-            PowerMockito.doReturn(resolvedSecret).when(secretResolveManager).
+            doReturn(resolvedSecret).when(secretResolveManager).
                     getResolvedSecret(anyString(), anyString());
 
             IdentityVerificationProvider identityVerificationProvider =
-                    idVProviderDAO.getIdVPByName("ONFIDO",  -1234);
+                    idVProviderDAO.getIdVPByName(idVProviderName,  -1234);
             Assert.assertEquals(identityVerificationProvider.getIdVProviderUuid(),
                     "1c7ce08b-2ebc-4b9e-a107-3b129c019954");
         }
@@ -200,9 +213,6 @@ public class IdVProviderDAOImplTest {
     @Test(priority = 5)
     public void testGetCountOfIdVProviders() throws Exception {
 
-        mockStatic(IdentityDatabaseUtil.class);
-        SecretManagerImpl secretManager = mock(SecretManagerImpl.class);
-
         try (Connection connection = getConnection(DB_NAME)) {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
@@ -210,22 +220,22 @@ public class IdVProviderDAOImplTest {
             IdVPSecretProcessor idVPSecretProcessor = mock(IdVPSecretProcessor.class);
 
             SecretResolveManagerImpl secretResolveManager = mock(SecretResolveManagerImpl.class);
-            PowerMockito.whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
-            PowerMockito.whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
-            PowerMockito.whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
-            PowerMockito.doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
+            whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
+            whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
+            whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
+            doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
             Secret secret = new Secret();
-            PowerMockito.doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
+            doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
             SecretType secretType = new SecretType();
             secretType.setId("1234");
-            PowerMockito.doReturn(secretType).when(secretManager).getSecretType(anyString());
+            doReturn(secretType).when(secretManager).getSecretType(anyString());
 
             ResolvedSecret resolvedSecret = new ResolvedSecret();
             resolvedSecret.setResolvedSecretValue("1234-5678-91234-654246");
-            PowerMockito.doReturn(resolvedSecret).when(secretResolveManager).
+            doReturn(resolvedSecret).when(secretResolveManager).
                     getResolvedSecret(anyString(), anyString());
 
-            int countOfIdVProviders = idVProviderDAO.getCountOfIdVProviders(-1234);
+            int countOfIdVProviders = idVProviderDAO.getCountOfIdVProviders(tenantId);
             Assert.assertEquals(countOfIdVProviders, 1);
         }
     }
@@ -233,9 +243,6 @@ public class IdVProviderDAOImplTest {
     @Test(priority = 6)
     public void testIsIdVProviderExists() throws Exception {
 
-        mockStatic(IdentityDatabaseUtil.class);
-        SecretManagerImpl secretManager = mock(SecretManagerImpl.class);
-
         try (Connection connection = getConnection(DB_NAME)) {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
@@ -243,23 +250,22 @@ public class IdVProviderDAOImplTest {
             IdVPSecretProcessor idVPSecretProcessor = mock(IdVPSecretProcessor.class);
 
             SecretResolveManagerImpl secretResolveManager = mock(SecretResolveManagerImpl.class);
-            PowerMockito.whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
-            PowerMockito.whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
-            PowerMockito.whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
-            PowerMockito.doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
+            whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
+            whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
+            whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
+            doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
             Secret secret = new Secret();
-            PowerMockito.doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
+            doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
             SecretType secretType = new SecretType();
             secretType.setId("1234");
-            PowerMockito.doReturn(secretType).when(secretManager).getSecretType(anyString());
+            doReturn(secretType).when(secretManager).getSecretType(anyString());
 
             ResolvedSecret resolvedSecret = new ResolvedSecret();
             resolvedSecret.setResolvedSecretValue("1234-5678-91234-654246");
-            PowerMockito.doReturn(resolvedSecret).when(secretResolveManager).
+            doReturn(resolvedSecret).when(secretResolveManager).
                     getResolvedSecret(anyString(), anyString());
 
-            boolean isIdVProviderExists =
-                    idVProviderDAO.isIdVProviderExists("1c7ce08b-2ebc-4b9e-a107-3b129c019954", -1234);
+            boolean isIdVProviderExists = idVProviderDAO.isIdVProviderExists(idVProviderId, tenantId);
             Assert.assertTrue(isIdVProviderExists);
         }
     }
@@ -267,7 +273,6 @@ public class IdVProviderDAOImplTest {
     @Test(priority = 7)
     public void testUpdateIdVProviderExists() throws Exception {
 
-        mockStatic(IdentityDatabaseUtil.class);
         try (Connection connection = getConnection(DB_NAME)) {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
@@ -277,25 +282,22 @@ public class IdVProviderDAOImplTest {
             IdVPSecretProcessor idVPSecretProcessor = mock(IdVPSecretProcessor.class);
             SecretManagerImpl secretManager = mock(SecretManagerImpl.class);
             SecretResolveManagerImpl secretResolveManager = mock(SecretResolveManagerImpl.class);
-            PowerMockito.whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
-            PowerMockito.whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
-            PowerMockito.whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
-            PowerMockito.doReturn(false).when(secretManager).isSecretExist(anyString(), anyString());
+            whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
+            whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
+            whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
+            doReturn(false).when(secretManager).isSecretExist(anyString(), anyString());
             Secret secret = new Secret();
-            PowerMockito.doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
+            doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
             SecretType secretType = new SecretType();
             secretType.setId("1234");
-            PowerMockito.doReturn(secretType).when(secretManager).getSecretType(anyString());
-            idVProviderDAO.updateIdVProvider(idVProvider, updatedIdVProvider, -1234);
-//            Assert.assertEquals(identityVerificationProvider.getIdVProviderName(), "ONFIDO");
+            doReturn(secretType).when(secretManager).getSecretType(anyString());
+            idVProviderDAO.updateIdVProvider(idVProvider, updatedIdVProvider, tenantId);
         }
     }
 
     @Test(priority = 8)
     public void testDeleteIdVProvider() throws Exception {
 
-        mockStatic(IdentityDatabaseUtil.class);
-        SecretManagerImpl secretManager = mock(SecretManagerImpl.class);
         try (Connection connection = getConnection(DB_NAME)) {
             when(IdentityDatabaseUtil.getDBConnection(anyBoolean())).thenReturn(connection);
             when(IdentityDatabaseUtil.getDataSource()).thenReturn(dataSourceMap.get(DB_NAME));
@@ -303,25 +305,23 @@ public class IdVProviderDAOImplTest {
             IdVPSecretProcessor idVPSecretProcessor = mock(IdVPSecretProcessor.class);
 
             SecretResolveManagerImpl secretResolveManager = mock(SecretResolveManagerImpl.class);
-            PowerMockito.whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
-            PowerMockito.whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
-            PowerMockito.whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
-            PowerMockito.doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
+            whenNew(IdVPSecretProcessor.class).withNoArguments().thenReturn(idVPSecretProcessor);
+            whenNew(SecretManagerImpl.class).withNoArguments().thenReturn(secretManager);
+            whenNew(SecretResolveManagerImpl.class).withNoArguments().thenReturn(secretResolveManager);
+            doReturn(true).when(secretManager).isSecretExist(anyString(), anyString());
             Secret secret = new Secret();
-            PowerMockito.doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
+            doReturn(secret).when(secretManager).addSecret(anyString(), any(Secret.class));
             SecretType secretType = new SecretType();
             secretType.setId("1234");
-            PowerMockito.doReturn(secretType).when(secretManager).getSecretType(anyString());
+            doReturn(secretType).when(secretManager).getSecretType(anyString());
 
             ResolvedSecret resolvedSecret = new ResolvedSecret();
             resolvedSecret.setResolvedSecretValue("1234-5678-91234-654246");
-            PowerMockito.doReturn(resolvedSecret).when(secretResolveManager).
+            doReturn(resolvedSecret).when(secretResolveManager).
                     getResolvedSecret(anyString(), anyString());
 
-            idVProviderDAO.deleteIdVProvider("1c7ce08b-2ebc-4b9e-a107-3b129c019954", -1234);
-//            Assert.assertNotNull(countOfIdVProviders, 1);
+            idVProviderDAO.deleteIdVProvider(idVProviderId, tenantId);
         }
-        closeH2Database();
     }
 
     @Test
@@ -329,29 +329,6 @@ public class IdVProviderDAOImplTest {
 
         int priority = idVProviderDAO.getPriority();
         Assert.assertEquals(priority, 1);
-    }
-
-    private void prepareConfigs() {
-
-        mockCarbonContextForTenant(SUPER_TENANT_ID, SUPER_TENANT_DOMAIN_NAME);
-        mockIdentityTenantUtility();
-    }
-
-    private void mockCarbonContextForTenant(int tenantId, String tenantDomain) {
-
-        mockStatic(PrivilegedCarbonContext.class);
-        PrivilegedCarbonContext privilegedCarbonContext = mock(PrivilegedCarbonContext.class);
-        when(PrivilegedCarbonContext.getThreadLocalCarbonContext()).thenReturn(privilegedCarbonContext);
-        when(privilegedCarbonContext.getTenantDomain()).thenReturn(tenantDomain);
-        when(privilegedCarbonContext.getTenantId()).thenReturn(tenantId);
-        when(privilegedCarbonContext.getUsername()).thenReturn("admin");
-    }
-
-    private void mockIdentityTenantUtility() {
-
-        mockStatic(IdentityTenantUtil.class);
-        IdentityTenantUtil identityTenantUtil = mock(IdentityTenantUtil.class);
-        when(identityTenantUtil.getTenantDomain(any(Integer.class))).thenReturn(SUPER_TENANT_DOMAIN_NAME);
     }
 
     public static void closeH2Database() throws Exception {
@@ -362,10 +339,10 @@ public class IdVProviderDAOImplTest {
         }
     }
 
-    private static String getFilePath(String fileName) {
+    private static String getFilePath() {
 
-        if (StringUtils.isNotBlank(fileName)) {
-            return Paths.get(System.getProperty("user.dir"), "src", "test", "resources", "dbscripts", fileName)
+        if (StringUtils.isNotBlank("h2.sql")) {
+            return Paths.get(System.getProperty("user.dir"), "src", "test", "resources", "dbscripts", "h2.sql")
                     .toString();
         }
         throw new IllegalArgumentException("DB Script file name cannot be empty.");
@@ -390,35 +367,6 @@ public class IdVProviderDAOImplTest {
             connection.createStatement().executeUpdate("RUNSCRIPT FROM '" + scriptPath + "'");
         }
         dataSourceMap.put(databaseName, dataSource);
-    }
-
-    private IdentityVerificationProvider addTestIdVProvider() {
-
-        IdentityVerificationProvider idVProvider = new IdentityVerificationProvider();
-        idVProvider.setIdVPUUID("1c7ce08b-2ebc-4b9e-a107-3b129c019954");
-        idVProvider.setIdVProviderName("ONFIDO");
-        idVProvider.setIdVProviderDescription("ONFIDO identity verification provider");
-
-        Map<String, String> claimMappings = new HashMap<>();
-        claimMappings.put("http://wso2.org/claims/givenname", "firstName");
-        claimMappings.put("http://wso2.org/claims/lastname", "lastName");
-        idVProvider.setClaimMappings(claimMappings);
-
-        IdVConfigProperty[] idVConfigProperties = new IdVConfigProperty[2];
-        IdVConfigProperty idVConfigProperty1 = new IdVConfigProperty();
-        idVConfigProperty1.setName("token");
-        idVConfigProperty1.setValue("1234-5678-91234-654246");
-        idVConfigProperty1.setConfidential(true);
-        idVConfigProperties[0] = idVConfigProperty1;
-
-        IdVConfigProperty idVConfigProperty2 = new IdVConfigProperty();
-        idVConfigProperty2.setName("apiUrl");
-        idVConfigProperty2.setValue("https://api.test.com/v1/");
-        idVConfigProperty2.setConfidential(false);
-        idVConfigProperties[1] = idVConfigProperty2;
-
-        idVProvider.setIdVConfigProperties(idVConfigProperties);
-        return idVProvider;
     }
 
     private IdentityVerificationProvider getOldIdVProvider() {

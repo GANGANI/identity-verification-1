@@ -1,55 +1,62 @@
+/*
+ * Copyright (c) 2023, WSO2 LLC. (http://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.carbon.extension.identity.verification.provider.dao;
 
-import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.lang.StringUtils;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.carbon.base.CarbonBaseConstants;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.carbon.extension.identity.verification.provider.IdVPSecretProcessor;
 import org.wso2.carbon.extension.identity.verification.provider.cache.IdVProviderByIdCache;
 import org.wso2.carbon.extension.identity.verification.provider.cache.IdVProviderByIdCacheKey;
 import org.wso2.carbon.extension.identity.verification.provider.cache.IdVProviderByNameCache;
 import org.wso2.carbon.extension.identity.verification.provider.cache.IdVProviderByNameCacheKey;
 import org.wso2.carbon.extension.identity.verification.provider.cache.IdVProviderCacheEntry;
-import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtException;
 import org.wso2.carbon.extension.identity.verification.provider.internal.IdVProviderDataHolder;
-import org.wso2.carbon.extension.identity.verification.provider.model.IdVConfigProperty;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVerificationProvider;
-import org.wso2.carbon.identity.core.util.IdentityDatabaseUtil;
-import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.powermock.api.mockito.PowerMockito.doNothing;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
-import static org.testng.Assert.*;
-import static org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
-import static org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_ID;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
+import static org.testng.Assert.assertTrue;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.addTestIdVProvider;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.idVProviderId;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.idVProviderName;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.tenantId;
 
-@PrepareForTest({PrivilegedCarbonContext.class, IdentityTenantUtil.class, IdVProviderByIdCache.class,
-        IdVProviderByNameCache.class})
+@PrepareForTest({IdVProviderByIdCache.class, IdVProviderByNameCache.class})
 public class CachedBackedIdVProviderDAOTest {
 
     private IdVProviderDAO idVProviderDAO;
     private IdVProviderByNameCache idVProviderByNameCache;
     private IdVProviderByIdCache idVProviderByIdCache;
     private IdVProviderDAO idVProviderDAOImpl;
-    private static Map<String, BasicDataSource> dataSourceMap = new HashMap<>();
-    private static final String DB_NAME = "test";
+    private IdVProviderByIdCacheKey idVProviderByIdCacheKey;
+    private IdVProviderCacheEntry idVProviderCacheEntry;
+    private IdVProviderByNameCacheKey idVProviderByNameCacheKey;
 
     @Test
     public void testGetPriority() {
@@ -59,9 +66,9 @@ public class CachedBackedIdVProviderDAOTest {
     }
 
     @BeforeMethod
-    public void setUp() throws Exception {
+    public void setUp() {
 
-        idVProviderDAOImpl = new IdVProviderDAOImpl();
+        idVProviderDAOImpl = mock(IdVProviderDAOImpl.class);
 
         mockStatic(IdVProviderByIdCache.class);
         idVProviderByIdCache = mock(IdVProviderByIdCache.class);
@@ -74,171 +81,107 @@ public class CachedBackedIdVProviderDAOTest {
         idVProviderDAO = new CachedBackedIdVProviderDAO(idVProviderDAOImpl);
         IdVProviderDataHolder.getInstance().
                 setIdVProviderDAOs(Collections.singletonList(idVProviderDAO));
-//        initiateH2Database(DB_NAME, getFilePath("h2.sql"));
-        String carbonHome = Paths.get(System.getProperty("user.dir"), "target", "test-classes").toString();
-        System.setProperty(CarbonBaseConstants.CARBON_HOME, carbonHome);
-        System.setProperty(CarbonBaseConstants.CARBON_CONFIG_DIR_PATH, Paths.get(carbonHome, "conf").toString());
-        prepareConfigs();
+
+        idVProviderByIdCacheKey = mock(IdVProviderByIdCacheKey.class);
+        idVProviderCacheEntry = mock(IdVProviderCacheEntry.class);
+        idVProviderByNameCacheKey = mock(IdVProviderByNameCacheKey.class);
     }
 
     @Test
     public void testGetIdVProvider() throws Exception {
 
         IdentityVerificationProvider identityVerificationProvider = addTestIdVProvider();
-        IdVProviderByIdCacheKey idVProviderByIdCacheKey = mock(IdVProviderByIdCacheKey.class);
-        IdVProviderCacheEntry idVProviderCacheEntry = mock(IdVProviderCacheEntry.class);
-        PowerMockito.whenNew(IdVProviderByIdCacheKey.class).withAnyArguments().thenReturn(idVProviderByIdCacheKey);
+        whenNew(IdVProviderByIdCacheKey.class).withAnyArguments().thenReturn(idVProviderByIdCacheKey);
         when(idVProviderByIdCache.getValueFromCache(any(IdVProviderByIdCacheKey.class), anyInt())).
                 thenReturn(idVProviderCacheEntry);
         when(idVProviderCacheEntry.getIdentityVerificationProvider()).thenReturn(identityVerificationProvider);
         IdentityVerificationProvider idVProvider =
-                idVProviderDAO.getIdVProvider("1c7ce08b-2ebc-4b9e-a107-3b129c019954", -1234);
-        Assert.assertEquals(idVProvider.getIdVProviderName(), "ONFIDO");
+                idVProviderDAO.getIdVProvider(idVProviderId, tenantId);
+        Assert.assertEquals(idVProvider.getIdVProviderName(), idVProviderName);
     }
 
     @Test
     public void testIsIdVProviderExists() throws Exception {
 
         IdentityVerificationProvider identityVerificationProvider = addTestIdVProvider();
-        IdVProviderByIdCacheKey idVProviderByIdCacheKey = mock(IdVProviderByIdCacheKey.class);
-        IdVProviderCacheEntry idVProviderCacheEntry = mock(IdVProviderCacheEntry.class);
-        PowerMockito.whenNew(IdVProviderByIdCacheKey.class).withAnyArguments().thenReturn(idVProviderByIdCacheKey);
+        whenNew(IdVProviderByIdCacheKey.class).withAnyArguments().thenReturn(idVProviderByIdCacheKey);
         when(idVProviderByIdCache.getValueFromCache(any(IdVProviderByIdCacheKey.class), anyInt())).
                 thenReturn(idVProviderCacheEntry);
         when(idVProviderCacheEntry.getIdentityVerificationProvider()).thenReturn(identityVerificationProvider);
         boolean isIdVProviderExists=
-                idVProviderDAO.isIdVProviderExists("1c7ce08b-2ebc-4b9e-a107-3b129c019954", -1234);
+                idVProviderDAO.isIdVProviderExists(idVProviderId, tenantId);
         assertTrue(isIdVProviderExists);
     }
 
-//
-//    @Test
-//    public void testAddIdVProvider() {
-//
-//    }
-//
-//    @Test
-//    public void testUpdateIdVProvider() {
-//
-//    }
-//
-//    @Test
-//    public void testGetIdVProviders() {
-//
-//    }
-//
-//    @Test
-//    public void testGetCountOfIdVProviders() {
-//
-//    }
-//
+    @Test
+    public void testAddIdVProvider() throws Exception {
+
+        IdentityVerificationProvider identityVerificationProvider = addTestIdVProvider();
+        doNothing().when(idVProviderDAOImpl).
+                addIdVProvider(any(IdentityVerificationProvider.class), anyInt());
+
+        whenNew(IdVProviderByIdCacheKey.class).withAnyArguments().thenReturn(idVProviderByIdCacheKey);
+        whenNew(IdVProviderCacheEntry.class).withAnyArguments().thenReturn(idVProviderCacheEntry);
+
+
+        idVProviderDAO.addIdVProvider(identityVerificationProvider, tenantId);
+    }
+
+    @Test
+    public void testUpdateIdVProvider() throws Exception {
+
+        IdentityVerificationProvider identityVerificationProvider = addTestIdVProvider();
+        doNothing().when(idVProviderDAOImpl).updateIdVProvider(any(IdentityVerificationProvider.class),
+                any(IdentityVerificationProvider.class), anyInt());
+
+        whenNew(IdVProviderByIdCacheKey.class).withAnyArguments().thenReturn(idVProviderByIdCacheKey);
+
+        doNothing().when(idVProviderByIdCache).
+                clearCacheEntry(any(IdVProviderByIdCacheKey.class), anyInt());
+
+        idVProviderDAO.updateIdVProvider(identityVerificationProvider, identityVerificationProvider, tenantId);
+    }
+
+    @Test
+    public void testGetIdVProviders() throws Exception {
+
+        List<IdentityVerificationProvider> idvProviders = new ArrayList<>();
+        idvProviders.add(addTestIdVProvider());
+        when(idVProviderDAOImpl.getIdVProviders(anyInt(), anyInt(), anyInt())).thenReturn(idvProviders);
+        List<IdentityVerificationProvider> identityVerificationProviders =
+                idVProviderDAO.getIdVProviders(2, 0, tenantId);
+        Assert.assertEquals(identityVerificationProviders, idvProviders);
+    }
+
+    @Test
+    public void testGetCountOfIdVProviders() throws Exception {
+
+        when(idVProviderDAOImpl.getCountOfIdVProviders(anyInt())).thenReturn(1);
+        int countOfIdVProviders = idVProviderDAO.getCountOfIdVProviders(tenantId);
+        Assert.assertEquals(countOfIdVProviders, 1);
+    }
+
     @Test
     public void testGetIdVPByName() throws Exception {
 
         IdentityVerificationProvider identityVerificationProvider = addTestIdVProvider();
-        IdVProviderByNameCacheKey idVProviderByNameCacheKey = mock(IdVProviderByNameCacheKey.class);
-        IdVProviderCacheEntry idVProviderCacheEntry = mock(IdVProviderCacheEntry.class);
-        PowerMockito.whenNew(IdVProviderByNameCacheKey.class).withAnyArguments().thenReturn(idVProviderByNameCacheKey);
+        whenNew(IdVProviderByNameCacheKey.class).withAnyArguments().thenReturn(idVProviderByNameCacheKey);
         when(idVProviderByNameCache.getValueFromCache(any(IdVProviderByNameCacheKey.class), anyInt())).
                 thenReturn(idVProviderCacheEntry);
         when(idVProviderCacheEntry.getIdentityVerificationProvider()).thenReturn(identityVerificationProvider);
         IdentityVerificationProvider idVProvider =
-                idVProviderDAO.getIdVPByName("ONFIDO", -1234);
-        Assert.assertEquals(idVProvider.getIdVProviderName(), "ONFIDO");
-    }
-//
-//    @Test
-//    public void testDeleteIdVProvider() {
-//
-//    }
-
-    private void prepareConfigs() {
-
-        mockCarbonContextForTenant(SUPER_TENANT_ID, SUPER_TENANT_DOMAIN_NAME);
-        mockIdentityTenantUtility();
+                idVProviderDAO.getIdVPByName(idVProviderName, tenantId);
+        Assert.assertEquals(idVProvider.getIdVProviderName(), idVProviderName);
     }
 
-    private void mockCarbonContextForTenant(int tenantId, String tenantDomain) {
+    @Test
+    public void testDeleteIdVProvider() throws Exception {
 
-        mockStatic(PrivilegedCarbonContext.class);
-        PrivilegedCarbonContext privilegedCarbonContext = mock(PrivilegedCarbonContext.class);
-        when(PrivilegedCarbonContext.getThreadLocalCarbonContext()).thenReturn(privilegedCarbonContext);
-        when(privilegedCarbonContext.getTenantDomain()).thenReturn(tenantDomain);
-        when(privilegedCarbonContext.getTenantId()).thenReturn(tenantId);
-        when(privilegedCarbonContext.getUsername()).thenReturn("admin");
-    }
-
-    private void mockIdentityTenantUtility() {
-
-        mockStatic(IdentityTenantUtil.class);
-        IdentityTenantUtil identityTenantUtil = mock(IdentityTenantUtil.class);
-        when(identityTenantUtil.getTenantDomain(any(Integer.class))).thenReturn(SUPER_TENANT_DOMAIN_NAME);
-    }
-
-    public static void closeH2Database() throws Exception {
-
-        BasicDataSource dataSource = dataSourceMap.get(DB_NAME);
-        if (dataSource != null) {
-            dataSource.close();
-        }
-    }
-
-    private static String getFilePath(String fileName) {
-
-        if (StringUtils.isNotBlank(fileName)) {
-            return Paths.get(System.getProperty("user.dir"), "src", "test", "resources", "dbscripts", fileName)
-                    .toString();
-        }
-        throw new IllegalArgumentException("DB Script file name cannot be empty.");
-    }
-
-    private static Connection getConnection(String database) throws SQLException {
-
-        if (dataSourceMap.get(database) != null) {
-            return dataSourceMap.get(database).getConnection();
-        }
-        throw new RuntimeException("No datasource initiated for database: " + database);
-    }
-
-    private void initiateH2Database(String databaseName, String scriptPath) throws Exception {
-
-        BasicDataSource dataSource = new BasicDataSource();
-        dataSource.setDriverClassName("org.h2.Driver");
-        dataSource.setUsername("username");
-        dataSource.setPassword("password");
-        dataSource.setUrl("jdbc:h2:mem:test" + databaseName);
-        try (Connection connection = dataSource.getConnection()) {
-            connection.createStatement().executeUpdate("RUNSCRIPT FROM '" + scriptPath + "'");
-        }
-        dataSourceMap.put(databaseName, dataSource);
-    }
-
-    private IdentityVerificationProvider addTestIdVProvider() {
-
-        IdentityVerificationProvider idVProvider = new IdentityVerificationProvider();
-        idVProvider.setIdVPUUID("1c7ce08b-2ebc-4b9e-a107-3b129c019954");
-        idVProvider.setIdVProviderName("ONFIDO");
-        idVProvider.setIdVProviderDescription("ONFIDO identity verification provider");
-
-        Map<String, String> claimMappings = new HashMap<>();
-        claimMappings.put("http://wso2.org/claims/givenname", "firstName");
-        claimMappings.put("http://wso2.org/claims/lastname", "lastName");
-        idVProvider.setClaimMappings(claimMappings);
-
-        IdVConfigProperty[] idVConfigProperties = new IdVConfigProperty[2];
-        IdVConfigProperty idVConfigProperty1 = new IdVConfigProperty();
-        idVConfigProperty1.setName("token");
-        idVConfigProperty1.setValue("1234-5678-91234-654246");
-        idVConfigProperty1.setConfidential(true);
-        idVConfigProperties[0] = idVConfigProperty1;
-
-        IdVConfigProperty idVConfigProperty2 = new IdVConfigProperty();
-        idVConfigProperty2.setName("apiUrl");
-        idVConfigProperty2.setValue("https://api.test.com/v1/");
-        idVConfigProperty2.setConfidential(false);
-        idVConfigProperties[1] = idVConfigProperty2;
-
-        idVProvider.setIdVConfigProperties(idVConfigProperties);
-        return idVProvider;
+        IdentityVerificationProvider identityVerificationProvider = addTestIdVProvider();
+        whenNew(IdVProviderByIdCacheKey.class).withAnyArguments().thenReturn(idVProviderByIdCacheKey);
+        when(idVProviderByIdCache.getValueFromCache(any(IdVProviderByIdCacheKey.class), anyInt())).
+                thenReturn(idVProviderCacheEntry);
+        when(idVProviderCacheEntry.getIdentityVerificationProvider()).thenReturn(identityVerificationProvider);
+        idVProviderDAO.deleteIdVProvider(idVProviderId, tenantId);
     }
 }

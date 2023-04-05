@@ -20,6 +20,8 @@ package org.wso2.carbon.extension.identity.verification.provider.util;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
+import org.wso2.carbon.extension.identity.verification.provider.model.IdVConfigProperty;
+import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVerificationProvider;
 import org.wso2.carbon.identity.secret.mgt.core.model.Secret;
 import org.wso2.carbon.identity.secret.mgt.core.model.SecretType;
 
@@ -34,68 +36,36 @@ import static org.mockito.Mockito.spy;
 
 public class TestUtils {
 
-    public static final String H2_SCRIPT_NAME = "h2.sql";
-    private static final String DB_NAME = "Config";
-    public static Map<String, BasicDataSource> dataSourceMap = new HashMap<>();
+    public static final String idVProviderId = "1c7ce08b-2ebc-4b9e-a107-3b129c019954";
+    public static final int tenantId = -1234;
+    public static final String idVProviderName = "IdVProviderName";
 
-    public static void initiateH2Base() throws Exception {
+    public static IdentityVerificationProvider addTestIdVProvider() {
 
-        BasicDataSource dataSource = new BasicDataSource();
-        dataSource.setDriverClassName("org.h2.Driver");
-        dataSource.setUsername("username");
-        dataSource.setPassword("password");
-        dataSource.setUrl("jdbc:h2:mem:test" + DB_NAME);
-        try (Connection connection = dataSource.getConnection()) {
-            connection.createStatement().executeUpdate("RUNSCRIPT FROM '" + getFilePath(H2_SCRIPT_NAME) + "'");
-        }
-        dataSourceMap.put(DB_NAME, dataSource);
-    }
+        IdentityVerificationProvider idVProvider = new IdentityVerificationProvider();
+        idVProvider.setIdVPUUID(idVProviderId);
+        idVProvider.setIdVProviderName(idVProviderName);
+        idVProvider.setIdVProviderDescription("ONFIDO identity verification provider");
 
-    public static String getFilePath(String fileName) {
+        Map<String, String> claimMappings = new HashMap<>();
+        claimMappings.put("http://wso2.org/claims/givenname", "firstName");
+        claimMappings.put("http://wso2.org/claims/lastname", "lastName");
+        idVProvider.setClaimMappings(claimMappings);
 
-        if (StringUtils.isNotBlank(fileName)) {
-            return Paths.get(System.getProperty("user.dir"), "src", "test", "resources", "dbscripts",
-                    fileName).toString();
-        }
-        throw new IllegalArgumentException("DB Script file name cannot be empty.");
-    }
+        IdVConfigProperty[] idVConfigProperties = new IdVConfigProperty[2];
+        IdVConfigProperty idVConfigProperty1 = new IdVConfigProperty();
+        idVConfigProperty1.setName("token");
+        idVConfigProperty1.setValue("1234-5678-91234-654246");
+        idVConfigProperty1.setConfidential(true);
+        idVConfigProperties[0] = idVConfigProperty1;
 
-    public static Connection getConnection() throws SQLException {
+        IdVConfigProperty idVConfigProperty2 = new IdVConfigProperty();
+        idVConfigProperty2.setName("apiUrl");
+        idVConfigProperty2.setValue("https://api.test.com/v1/");
+        idVConfigProperty2.setConfidential(false);
+        idVConfigProperties[1] = idVConfigProperty2;
 
-        if (dataSourceMap.get(DB_NAME) != null) {
-            return dataSourceMap.get(DB_NAME).getConnection();
-        }
-        throw new RuntimeException("No data source initiated for database: " + DB_NAME);
-    }
-
-    public static Connection spyConnection(Connection connection) throws SQLException {
-
-        Connection spy = spy(connection);
-        doNothing().when(spy).close();
-        return spy;
-    }
-
-    public static void closeH2Base() throws Exception {
-
-        BasicDataSource dataSource = dataSourceMap.get(DB_NAME);
-        if (dataSource != null) {
-            dataSource.close();
-        }
-    }
-
-    public static Secret getSampleSecretAdd(String name, String value) {
-
-        Secret secretAdd = new Secret();
-        secretAdd.setSecretName(name);
-        secretAdd.setSecretValue(value);
-        return secretAdd;
-    }
-
-    public static SecretType getSampleSecretTypeAdd (String name, String description) {
-
-        SecretType secretType = new SecretType();
-        secretType.setName(name);
-        secretType.setDescription(description);
-        return secretType;
+        idVProvider.setIdVConfigProperties(idVConfigProperties);
+        return idVProvider;
     }
 }

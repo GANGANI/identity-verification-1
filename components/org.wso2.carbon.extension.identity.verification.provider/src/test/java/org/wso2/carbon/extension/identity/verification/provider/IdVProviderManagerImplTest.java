@@ -17,8 +17,6 @@
  */
 package org.wso2.carbon.extension.identity.verification.provider;
 
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.testng.PowerMockTestCase;
@@ -26,20 +24,13 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import org.wso2.carbon.base.CarbonBaseConstants;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAO;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtClientException;
 import org.wso2.carbon.extension.identity.verification.provider.exception.IdVProviderMgtException;
 import org.wso2.carbon.extension.identity.verification.provider.internal.IdVProviderDataHolder;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdVConfigProperty;
 import org.wso2.carbon.extension.identity.verification.provider.model.IdentityVerificationProvider;
-import org.wso2.carbon.identity.core.util.IdentityDatabaseUtil;
-import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
-import org.wso2.carbon.identity.secret.mgt.core.exception.SecretManagementClientException;
 
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,46 +40,43 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.powermock.api.mockito.PowerMockito.doNothing;
+import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
-import static org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
-import static org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_ID;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.addTestIdVProvider;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.idVProviderId;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.idVProviderName;
+import static org.wso2.carbon.extension.identity.verification.provider.util.TestUtils.tenantId;
 
 /**
  * Test class for IdVProviderManagerImpl.
  */
-@PrepareForTest({PrivilegedCarbonContext.class, IdentityDatabaseUtil.class, IdentityUtil.class,
-        IdentityTenantUtil.class, IdVProviderDataHolder.class, IdVPSecretProcessor.class, IdentityVerificationProvider.class})
+@PrepareForTest({IdVProviderDataHolder.class, IdentityVerificationProvider.class})
 public class IdVProviderManagerImplTest extends PowerMockTestCase {
 
     private IdVProviderManager idVProviderManager;
-
-    @Mock
     private IdVProviderDataHolder idVProviderDataHolder;
-    @Mock
     private IdVProviderDAO idVProviderDAO;
 
     @BeforeMethod
-    public void setUp() throws Exception {
+    public void setUp() {
 
-        String carbonHome = Paths.get(System.getProperty("user.dir"), "target", "test-classes").toString();
-        System.setProperty(CarbonBaseConstants.CARBON_HOME, carbonHome);
-        System.setProperty(CarbonBaseConstants.CARBON_CONFIG_DIR_PATH, Paths.get(carbonHome, "conf").toString());
-        prepareConfigs();
+        idVProviderDAO = mock(IdVProviderDAO.class);
+        idVProviderDataHolder = mock(IdVProviderDataHolder.class);
+
+        mockIdVProviderDAO();
+        idVProviderManager = new IdVProviderManagerImpl();
     }
 
     @Test
     public void testGetIdVProvider() throws IdVProviderMgtException {
 
-        mockIdVProviderDAO();
         IdentityVerificationProvider idvProvider = addTestIdVProvider();
-        idVProviderManager = new IdVProviderManagerImpl();
-        PowerMockito.doReturn(idvProvider).when(idVProviderDAO).getIdVProvider(anyString(), anyInt());
+        doReturn(idvProvider).when(idVProviderDAO).getIdVProvider(anyString(), anyInt());
         IdentityVerificationProvider identityVerificationProvider =
-                idVProviderManager.getIdVProvider("1c7ce08b-2ebc-4b9e-a107-3b129c019954", 1);
-        Assert.assertEquals(identityVerificationProvider.getIdVProviderUuid(),
-                "1c7ce08b-2ebc-4b9e-a107-3b129c019954");
+                idVProviderManager.getIdVProvider(idVProviderId, tenantId);
+        Assert.assertEquals(identityVerificationProvider.getIdVProviderUuid(), idVProviderId);
     }
 
     @Test(expectedExceptions = IdVProviderMgtClientException.class)
@@ -101,50 +89,47 @@ public class IdVProviderManagerImplTest extends PowerMockTestCase {
         }
     }
 
-    @Test
-    public void testAddIdVProvider() throws Exception {
+    @DataProvider(name = "addIdVProvider")
+    public Object[][] addIdVProvider() {
 
-        mockIdVProviderDAO();
-        IdentityVerificationProvider idvProvider = addTestIdVProvider();
-        idVProviderManager = new IdVProviderManagerImpl();
+        IdentityVerificationProvider idvProvider = addTestIdVProvider1();
+        return new Object[][] {
+                {idvProvider, idvProvider},
+                {null, null}};
+    }
 
-        PowerMockito.doNothing().when(idVProviderDAO).
+    @Test(dataProvider = "addIdVProvider")
+    public void testAddIdVProvider(IdentityVerificationProvider idvProvider,
+                                   IdentityVerificationProvider expectedIdVProvider) throws Exception {
+
+        doNothing().when(idVProviderDAO).
                 addIdVProvider(any(IdentityVerificationProvider.class), anyInt());
         IdentityVerificationProvider identityVerificationProvider =
                 idVProviderManager.addIdVProvider(idvProvider, -1234);
-        Assert.assertEquals(identityVerificationProvider.getIdVProviderName(), "ONFIDO");
-
+        Assert.assertEquals(identityVerificationProvider.getIdVProviderName(), expectedIdVProvider.getIdVProviderName());
     }
 
     @Test
     public void testGetCountOfIdVProviders() throws IdVProviderMgtException {
 
-        mockIdVProviderDAO();
-        idVProviderManager = new IdVProviderManagerImpl();
-
-        PowerMockito.doReturn(5).when(idVProviderDAO).getCountOfIdVProviders(anyInt());
-        int countOfIdVProviders = idVProviderManager.getCountOfIdVProviders(-1234);
+        doReturn(5).when(idVProviderDAO).getCountOfIdVProviders(anyInt());
+        int countOfIdVProviders = idVProviderManager.getCountOfIdVProviders(tenantId);
         Assert.assertEquals(countOfIdVProviders, 5);
     }
 
     @Test
     public void testDeleteIdVProvider() throws IdVProviderMgtException {
 
-        mockIdVProviderDAO();
-        idVProviderManager = new IdVProviderManagerImpl();
-        PowerMockito.doNothing().when(idVProviderDAO).deleteIdVProvider(anyString(), anyInt());
-        idVProviderManager.deleteIdVProvider("1c7ce08b-2ebc-4b9e-a107-3b129c019954", 1);
+        doNothing().when(idVProviderDAO).deleteIdVProvider(anyString(), anyInt());
+        idVProviderManager.deleteIdVProvider(idVProviderId, 1);
 
     }
 
     @Test
     public void testUpdateIdVProvider() throws IdVProviderMgtException {
 
-        mockIdVProviderDAO();
         IdentityVerificationProvider idvProvider = addTestIdVProvider();
-        idVProviderManager = new IdVProviderManagerImpl();
-        PowerMockito.doNothing().when(idVProviderDAO).
-                updateIdVProvider(any(IdentityVerificationProvider.class),
+        doNothing().when(idVProviderDAO).updateIdVProvider(any(IdentityVerificationProvider.class),
                         any(IdentityVerificationProvider.class), anyInt());
         IdentityVerificationProvider idvProviderList =
                 idVProviderManager.updateIdVProvider(idvProvider, idvProvider, 1);
@@ -152,50 +137,76 @@ public class IdVProviderManagerImplTest extends PowerMockTestCase {
                 "ONFIDO identity verification provider");
     }
 
-    @Test
-    public void testGetIdVProviders() throws IdVProviderMgtException {
+    @DataProvider(name = "getIdVProvidersData")
+    public Object[][] createValidParameters() {
+        return new Object[][] {
+                { 2, 0, 1},
+                {null, 0, 1},
+                {105, 0, 1},
+                {2, null, 1}};
+    }
 
-        mockIdVProviderDAO();
+    @Test(dataProvider = "getIdVProvidersData")
+    public void testGetIdVProviders(Integer limit, Integer offset, int expected)
+            throws IdVProviderMgtException {
+
         List<IdentityVerificationProvider> idvProviders = new ArrayList<>();
         idvProviders.add(addTestIdVProvider());
-        idVProviderManager = new IdVProviderManagerImpl();
-        PowerMockito.doReturn(idvProviders).when(idVProviderDAO).
-                getIdVProviders(anyInt(), anyInt(), anyInt());
+        doReturn(idvProviders).when(idVProviderDAO).getIdVProviders(anyInt(), anyInt(), anyInt());
         List<IdentityVerificationProvider> idvProviderList =
-                idVProviderManager.getIdVProviders(2, 1, 1);
-        Assert.assertEquals(idvProviderList.size(), 1);
+                idVProviderManager.getIdVProviders(limit, offset, 1);
+        Assert.assertEquals(idvProviderList.size(), expected);
+    }
+
+    @DataProvider(name = "getIdVProvidersDataWithInvalidInputs")
+    public Object[][] createInvalidValidParameters() {
+        return new Object[][] {
+                {-1, 0},
+                {2, -1}};
+    }
+
+    @Test(dataProvider = "getIdVProvidersDataWithInvalidInputs",
+            expectedExceptions = IdVProviderMgtClientException.class)
+    public void testGetIdVProvidersInvalidInputs(Integer limit, Integer offset)
+            throws IdVProviderMgtException {
+
+        List<IdentityVerificationProvider> idvProviders = new ArrayList<>();
+        idvProviders.add(addTestIdVProvider());
+        doReturn(idvProviders).when(idVProviderDAO).getIdVProviders(anyInt(), anyInt(), anyInt());
+        idVProviderManager.getIdVProviders(limit, offset, 1);
     }
 
     @Test
     public void testIsIdVProviderExists() throws IdVProviderMgtException {
 
-        mockIdVProviderDAO();
-        idVProviderManager = new IdVProviderManagerImpl();
-        PowerMockito.doReturn(true).when(idVProviderDAO).isIdVProviderExists(anyString(), anyInt());
-        boolean idVProviderExists =
-                idVProviderManager.isIdVProviderExists("1c7ce08b-2ebc-4b9e-a107-3b129c019954", 1);
+        doReturn(true).when(idVProviderDAO).isIdVProviderExists(anyString(), anyInt());
+        boolean idVProviderExists = idVProviderManager.isIdVProviderExists(idVProviderId, tenantId);
         Assert.assertTrue(idVProviderExists);
     }
 
     @Test
     public void testGetIdVPByName() throws IdVProviderMgtException {
 
-        mockIdVProviderDAO();
         IdentityVerificationProvider idvProvider = addTestIdVProvider();
-        idVProviderManager = new IdVProviderManagerImpl();
-        PowerMockito.doReturn(idvProvider).when(idVProviderDAO).
-                getIdVPByName(anyString(), anyInt());
+        doReturn(idvProvider).when(idVProviderDAO).getIdVPByName(anyString(), anyInt());
         IdentityVerificationProvider identityVerificationProvider =
-                idVProviderManager.getIdVPByName("ONFIDO", 1);
+                idVProviderManager.getIdVPByName(idVProviderName, 1);
         Assert.assertNotNull(identityVerificationProvider);
-        Assert.assertEquals(identityVerificationProvider.getIdVProviderName(), "ONFIDO");
+        Assert.assertEquals(identityVerificationProvider.getIdVProviderName(), idVProviderName);
     }
 
-    private IdentityVerificationProvider addTestIdVProvider() {
+    private void mockIdVProviderDAO() {
+
+        PowerMockito.mockStatic(IdVProviderDataHolder.class);
+        when(IdVProviderDataHolder.getInstance()).thenReturn(idVProviderDataHolder);
+        when(idVProviderDataHolder.getIdVProviderDAOs()).thenReturn(Collections.singletonList(idVProviderDAO));
+    }
+
+    public static IdentityVerificationProvider addTestIdVProvider1() {
 
         IdentityVerificationProvider idVProvider = new IdentityVerificationProvider();
-        idVProvider.setIdVPUUID("1c7ce08b-2ebc-4b9e-a107-3b129c019954");
-        idVProvider.setIdVProviderName("ONFIDO");
+        idVProvider.setIdVPUUID(idVProviderId);
+        idVProvider.setIdVProviderName(idVProviderName);
         idVProvider.setIdVProviderDescription("ONFIDO identity verification provider");
 
         Map<String, String> claimMappings = new HashMap<>();
@@ -218,36 +229,5 @@ public class IdVProviderManagerImplTest extends PowerMockTestCase {
 
         idVProvider.setIdVConfigProperties(idVConfigProperties);
         return idVProvider;
-    }
-
-    private void mockIdVProviderDAO() {
-
-        PowerMockito.mockStatic(IdVProviderDataHolder.class);
-        Mockito.when(IdVProviderDataHolder.getInstance()).thenReturn(idVProviderDataHolder);
-        Mockito.when(idVProviderDataHolder.getIdVProviderDAOs()).
-                thenReturn(Collections.singletonList(idVProviderDAO));
-    }
-
-    private void prepareConfigs() {
-
-        mockCarbonContextForTenant(SUPER_TENANT_ID, SUPER_TENANT_DOMAIN_NAME);
-        mockIdentityTenantUtility();
-    }
-
-    private void mockCarbonContextForTenant(int tenantId, String tenantDomain) {
-
-        mockStatic(PrivilegedCarbonContext.class);
-        PrivilegedCarbonContext privilegedCarbonContext = mock(PrivilegedCarbonContext.class);
-        when(PrivilegedCarbonContext.getThreadLocalCarbonContext()).thenReturn(privilegedCarbonContext);
-        when(privilegedCarbonContext.getTenantDomain()).thenReturn(tenantDomain);
-        when(privilegedCarbonContext.getTenantId()).thenReturn(tenantId);
-        when(privilegedCarbonContext.getUsername()).thenReturn("admin");
-    }
-
-    private void mockIdentityTenantUtility() {
-
-        mockStatic(IdentityTenantUtil.class);
-        IdentityTenantUtil identityTenantUtil = mock(IdentityTenantUtil.class);
-        when(identityTenantUtil.getTenantDomain(any(Integer.class))).thenReturn(SUPER_TENANT_DOMAIN_NAME);
     }
 }

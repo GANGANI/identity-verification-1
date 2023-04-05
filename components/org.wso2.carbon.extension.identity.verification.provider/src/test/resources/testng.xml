@@ -18,10 +18,12 @@
 
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="org.wso2.carbon.idp.mgt.suite" object-factory="org.powermock.modules.testng.PowerMockObjectFactory">
-    <test name="org.wso2.carbon.idp.mgt.test" preserve-order="true" parallel="false">
+<suite name="org.wso2.carbon.extension.identity.verification.provider.suite" object-factory="org.powermock.modules.testng.PowerMockObjectFactory">
+    <test name="org.wso2.carbon.extension.identity.verification.provider.test" preserve-order="true" parallel="false">
         <classes>
             <class name="org.wso2.carbon.extension.identity.verification.provider.IdVProviderManagerImplTest"/>
+            <class name="org.wso2.carbon.extension.identity.verification.provider.dao.CachedBackedIdVProviderDAOTest"/>
+            <class name="org.wso2.carbon.extension.identity.verification.provider.dao.IdVProviderDAOImplTest"/>
         </classes>
     </test>
 </suite>
